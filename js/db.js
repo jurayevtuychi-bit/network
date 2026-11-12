@@ -49,6 +49,7 @@ let state = {
   activeLabId: 1,
   strictGating: true,
   finalPassThreshold: 80,
+  adminCredentials: { email: "admin@tuit.uz", password: "admin123" },
   students: createDefaultStudents(),
   modules: JSON.parse(JSON.stringify(COURSE_MODULES)),
   labs: JSON.parse(JSON.stringify(LAB_MODULES)),
@@ -71,6 +72,8 @@ function loadState() {
       if (typeof parsed.strictGating === "boolean") state.strictGating = parsed.strictGating;
       if (parsed.finalPassThreshold) state.finalPassThreshold = parsed.finalPassThreshold;
       if (parsed.modules) state.modules = parsed.modules;
+      if (parsed.labs) state.labs = parsed.labs;
+      if (parsed.adminCredentials) state.adminCredentials = parsed.adminCredentials;
     }
   } catch (e) {}
 }
@@ -81,7 +84,9 @@ function saveState() {
       students: state.students,
       strictGating: state.strictGating,
       finalPassThreshold: state.finalPassThreshold,
-      modules: state.modules
+      modules: state.modules,
+      labs: state.labs,
+      adminCredentials: state.adminCredentials
     }));
   } catch (e) {}
 }

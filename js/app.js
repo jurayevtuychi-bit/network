@@ -106,7 +106,7 @@ function handleLogin(e) {
   const email = document.getElementById("login-email").value.trim().toLowerCase();
   const pass = document.getElementById("login-pass").value;
 
-  if (email === "admin@tuit.uz" && pass === "admin123") {
+  if (email === state.adminCredentials.email.toLowerCase() && pass === state.adminCredentials.password) {
     state.currentUser = { role: "admin", name: "Administrator" };
     showToast("Admin paneliga xush kelibsiz!", "success");
     render();
@@ -471,6 +471,157 @@ function adminToggleStrictGating() {
   render();
 }
 
+
+function openAddTopicModal() {
+  const nextId = state.modules.length ? Math.max(...state.modules.map(m => m.id)) + 1 : 1;
+  openModal(`
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold">Yangi mavzu qo‘shish (${nextId}-mavzu)</h3>
+      <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 font-bold text-xl">✕</button>
+    </div>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Nazariy mavzu nomi</label>
+        <input id="new-theory-title" type="text" placeholder="Masalan: IPv6 marshrutlash protokollari" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Amaliy mavzu nomi</label>
+        <input id="new-practical-title" type="text" placeholder="Masalan: IPv6 manzillarni sozlash" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Nazariy matn (asosiy tushuncha)</label>
+        <textarea id="new-theory-text" rows="3" placeholder="Mavzu bo‘yicha qisqacha nazariy ma’lumot..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm"></textarea>
+      </div>
+      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+        <div class="text-xs font-bold text-slate-700">1-test savoli (100% talab uchun)</div>
+        <input id="new-quiz-q" type="text" placeholder="Savol matni..." class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs" />
+        <div class="grid grid-cols-2 gap-2">
+          <input id="new-quiz-a" type="text" placeholder="To‘g‘ri javob (A)" class="px-2.5 py-1.5 border border-emerald-300 rounded-lg text-xs" />
+          <input id="new-quiz-b" type="text" placeholder="Noto‘g‘ri javob (B)" class="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-sm font-medium">Bekor qilish</button>
+        <button onclick="saveNewTopic()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">Qo‘shish</button>
+      </div>
+    </div>
+  `);
+}
+
+function saveNewTopic() {
+  const tTitle = document.getElementById("new-theory-title").value.trim();
+  const pTitle = document.getElementById("new-practical-title").value.trim();
+  const tText = document.getElementById("new-theory-text").value.trim();
+  const qText = document.getElementById("new-quiz-q").value.trim();
+  const qA = document.getElementById("new-quiz-a").value.trim();
+  const qB = document.getElementById("new-quiz-b").value.trim();
+  if (!tTitle || !pTitle) {
+    showToast("Nazariy va amaliy mavzu nomini kiriting!", "warning");
+    return;
+  }
+  const nextId = state.modules.length ? Math.max(...state.modules.map(m => m.id)) + 1 : 1;
+  state.modules.push({
+    id: nextId,
+    theoryTitle: tTitle,
+    practicalTitle: pTitle,
+    theoryContent: [tText || `${tTitle} mavzusi bo‘yicha asosiy nazariy tushunchalar va standartlar.`],
+    practicalVideoSteps: [
+      { time: "00:00", title: pTitle, caption: `${pTitle} bo‘yicha amaliy ko‘rsatmalar va misollar.` },
+      { time: "02:00", title: "Amaliy tekshiruv", caption: "Natijalarni tahlil qilish va xatolarni tuzatish." }
+    ],
+    practicalTask: {
+      title: `${pTitle} — Amaliy mashq`,
+      desc: "To‘g‘ri javobni tanlang.",
+      pairs: [{ device: tTitle, correct: qA || "To‘g‘ri variant", options: [qA || "To‘g‘ri variant", qB || "Boshqa variant"] }]
+    },
+    quiz: [
+      { q: qText || `${tTitle} mavzusining asosiy maqsadi nima?`, opts: [qA || "Tarmoq samaradorligini oshirish", qB || "Aloqani uzish"], ans: 0 }
+    ]
+  });
+  saveState();
+  closeModal();
+  showToast(`${nextId}-mavzu muvaffaqiyatli qo‘shildi!`, "success");
+  render();
+}
+
+function openAddLabModal() {
+  const nextId = state.labs.length ? Math.max(...state.labs.map(l => l.id)) + 1 : 1;
+  openModal(`
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold">Yangi laboratoriya qo‘shish (#${nextId})</h3>
+      <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 font-bold text-xl">✕</button>
+    </div>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Laboratoriya nomi</label>
+        <input id="new-lab-title" type="text" placeholder="Masalan: Cisco Packet Tracer da NAT sozlash" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Vosita / Texnologiya</label>
+        <input id="new-lab-tool" type="text" placeholder="Masalan: Cisco IOS NAT" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Tavsif</label>
+        <textarea id="new-lab-desc" rows="2" placeholder="Laboratoriya vazifasi..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm"></textarea>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Kutilayotgan CLI buyrug‘i</label>
+        <input id="new-lab-cmd" type="text" placeholder="Masalan: ip nat inside" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm font-mono" />
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-sm font-medium">Bekor qilish</button>
+        <button onclick="saveNewLab()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">Qo‘shish</button>
+      </div>
+    </div>
+  `);
+}
+
+function saveNewLab() {
+  const title = document.getElementById("new-lab-title").value.trim();
+  const tool = document.getElementById("new-lab-tool").value.trim() || "Cisco Packet Tracer";
+  const desc = document.getElementById("new-lab-desc").value.trim() || "Virtual laboratoriya mashg‘uloti.";
+  const cmd = document.getElementById("new-lab-cmd").value.trim() || "show running-config";
+  if (!title) {
+    showToast("Laboratoriya nomini kiriting!", "warning");
+    return;
+  }
+  const nextId = state.labs.length ? Math.max(...state.labs.map(l => l.id)) + 1 : 1;
+  state.labs.push({
+    id: nextId,
+    title,
+    tool,
+    desc,
+    videoSteps: [
+      { time: "00:00", title: title, caption: desc },
+      { time: "01:30", title: "CLI buyruqlar", caption: `Terminalda '${cmd}' buyrug‘ini bajarish.` }
+    ],
+    objectives: [`Terminalda '${cmd}' buyrug‘ini bajarish`],
+    expectedCommands: [cmd],
+    initialTopology: [
+      { name: "Router-1", type: "router", ip: "192.168.1.1", status: "up" },
+      { name: "PC-1", type: "pc", ip: "192.168.1.10", status: "up" }
+    ],
+    hint: `Terminalga '${cmd}' buyrug‘ini kiriting.`
+  });
+  saveState();
+  closeModal();
+  showToast(`${nextId}-laboratoriya qo‘shildi!`, "success");
+  render();
+}
+
+function saveAdminCredentials() {
+  const email = document.getElementById("admin-cred-email").value.trim().toLowerCase();
+  const pass = document.getElementById("admin-cred-pass").value.trim();
+  if (!email || pass.length < 3) {
+    showToast("Admin login va kamida 3 belgili parol kiriting!", "warning");
+    return;
+  }
+  state.adminCredentials = { email, password: pass };
+  saveState();
+  showToast("Admin login va paroli yangilandi!", "success");
+  render();
+}
+
 function openEditTopicModal(modId) {
   const mod = state.modules.find(m => m.id === modId);
   if (!mod) return;
@@ -488,6 +639,10 @@ function openEditTopicModal(modId) {
         <label class="block text-xs font-semibold text-slate-600 mb-1">Amaliy mavzu nomi</label>
         <input id="edit-practical-title" type="text" value="${escapeHtml(mod.practicalTitle)}" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm" />
       </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Nazariy matn (1-band)</label>
+        <textarea id="edit-theory-content" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">${escapeHtml(mod.theoryContent[0] || "")}</textarea>
+      </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="closeModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-sm font-medium">Bekor qilish</button>
         <button onclick="saveTopicEdit(${mod.id})" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">Saqlash</button>
@@ -501,6 +656,8 @@ function saveTopicEdit(modId) {
   if (!mod) return;
   mod.theoryTitle = document.getElementById("edit-theory-title").value.trim() || mod.theoryTitle;
   mod.practicalTitle = document.getElementById("edit-practical-title").value.trim() || mod.practicalTitle;
+  const newTheoryText = document.getElementById("edit-theory-content").value.trim();
+  if (newTheoryText) mod.theoryContent[0] = newTheoryText;
   saveState();
   closeModal();
   showToast(`${modId}-mavzu yangilandi!`, "success");
@@ -618,7 +775,7 @@ function renderAuthView() {
               <div class="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <strong>Sinov hisoblari:</strong><br/>
                 Talaba: <code class="text-indigo-600">azizbek@tuit.uz</code> / parol: <code class="text-indigo-600">123</code><br/>
-                Admin: <code class="text-amber-600">admin@tuit.uz</code> / parol: <code class="text-amber-600">admin123</code>
+                Admin: <code class="text-amber-600">${escapeHtml(state.adminCredentials.email)}</code> / parol: <code class="text-amber-600">${escapeHtml(state.adminCredentials.password)}</code>
               </div>
             </form>
           ` : `
@@ -1204,7 +1361,10 @@ function renderAdminView() {
       ${state.adminTab === "curriculum" ? `
         <div class="space-y-4">
           <div class="bg-white rounded-2xl p-5 border border-slate-200">
-            <h2 class="font-bold text-lg text-slate-900 mb-3">12 ta Nazariy va Amaliy mavzular</h2>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h2 class="font-bold text-lg text-slate-900">${state.modules.length} ta Nazariy va Amaliy mavzular</h2>
+              <button onclick="openAddTopicModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold">+ Yangi mavzu qo‘shish</button>
+            </div>
             <div class="divide-y divide-slate-100">
               ${state.modules.map(m => `
                 <div class="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -1218,7 +1378,10 @@ function renderAdminView() {
             </div>
           </div>
           <div class="bg-white rounded-2xl p-5 border border-slate-200">
-            <h2 class="font-bold text-lg text-slate-900 mb-3">8 ta Laboratoriya mashg‘ulotlari</h2>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h2 class="font-bold text-lg text-slate-900">${state.labs.length} ta Laboratoriya mashg‘ulotlari</h2>
+              <button onclick="openAddLabModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold">+ Yangi laboratoriya qo‘shish</button>
+            </div>
             <div class="divide-y divide-slate-100">
               ${state.labs.map(l => `
                 <div class="py-2.5">
@@ -1251,6 +1414,20 @@ function renderAdminView() {
             <select onchange="state.finalPassThreshold=Number(this.value); saveState(); showToast('O‘tish bali yangilandi', 'success');" class="px-3 py-2 rounded-xl border border-slate-300 text-sm font-bold">
               ${[70, 80, 90, 100].map(v => `<option value="${v}" ${state.finalPassThreshold===v ? 'selected' : ''}>${v}%</option>`).join("")}
             </select>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+            <div class="font-bold text-sm text-slate-900">Admin kirish login va parolini o‘zgartirish</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Admin Email / Login</label>
+                <input id="admin-cred-email" type="text" value="${escapeHtml(state.adminCredentials.email)}" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Admin Parol</label>
+                <input id="admin-cred-pass" type="text" value="${escapeHtml(state.adminCredentials.password)}" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm" />
+              </div>
+            </div>
+            <button onclick="saveAdminCredentials()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Admin ma’lumotlarini saqlash</button>
           </div>
         </div>
       ` : ""}
