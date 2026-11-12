@@ -556,6 +556,254 @@ const LAB_MODULES = [
   }
 ];
 
+
+const H5P_CONTENT = {
+  1: {
+    flashcards: [
+      { front: "ARPANET (1969)", back: "Internetning asosi bo‘lgan ilk paket kommutatsiyali kompyuter tarmog‘i." },
+      { front: "RJ-45 (8P8C)", back: "UTP Ethernet kabellarini tarmoq kartasi (NIC) va kommutatorga ulash konnektori." },
+      { front: "IEEE 802.3", back: "Simli Ethernet lokal tarmoq texnologiyasining xalqaro standarti." }
+    ],
+    blanks: { text: "1970-yillarda Vint Serf va Bob Kan tomonidan yaratilgan asosiy protokollar to‘plami ___ deb ataladi.", answer: "TCP/IP", hint: "3 harf / 2 harf" }
+  },
+  2: {
+    flashcards: [
+      { front: "OSI modeli (7 pog‘ona)", back: "Fizik, Kanal, Tarmoq, Transport, Seans, Taqdimot va Ilova pog‘onalaridan iborat etalon model." },
+      { front: "Yulduz (Star) topologiyasi", back: "Barcha kompyuterlar markaziy kommutator (Switch) orqali ulanadigan eng keng tarqalgan topologiya." },
+      { front: "PING buyrug‘i", back: "ICMP protokoli yordamida ikki tugun o‘rtasidagi aloqani tekshiruvchi diagnostika buyrug‘i." }
+    ],
+    blanks: { text: "OSI modelining 3-pog‘onasi bo‘lgan ___ pog‘onasida IP-manzillash va marshrutlash bajariladi.", answer: "Tarmoq", hint: "Network" }
+  },
+  3: {
+    flashcards: [
+      { front: "LAN / MAN / WAN", back: "Lokal (bino), Shahar (metropolitan) va Global (qit’alararo) tarmoq turlari." },
+      { front: "Inkapsulyatsiya", back: "Ma’lumot yuqoridan pastga tushganda har bir pog‘onada sarlavha qo‘shilishi jarayoni." },
+      { front: "Kadr (Frame)", back: "Kanal (Data Link) pog‘onasidagi ma’lumot uzatish birligi (PDU)." }
+    ],
+    blanks: { text: "Transport pog‘onasida ma’lumot birligi (PDU) ___ deb ataladi.", answer: "Segment", hint: "S...t" }
+  },
+  4: {
+    flashcards: [
+      { front: "GPON", back: "Passiv optik splitterlar orqali bitta toladan abonentlarga yuqori tezlikli kirish texnologiyasi." },
+      { front: "MAC manzil (48 bit)", back: "Tarmoq kartasining zavodda yozilgan fizik manzili (OUI + NIC)." },
+      { front: "ARP protokoli", back: "Ma’lum IP manzilga mos keluvchi MAC manzilni aniqlovchi protokol." }
+    ],
+    blanks: { text: "IPv4 manzili jami ___ bit (4 ta oktet) dan tashkil topgan.", answer: "32", hint: "Son kiriting" }
+  },
+  5: {
+    flashcards: [
+      { front: "DWDM", back: "Bitta optik tolada turli to‘lqin uzunliklarida ko‘plab kanallarni parallel uzatish." },
+      { front: "ASK / FSK / PSK", back: "Amplituda, Chastota va Faza modulyatsiyasi usullari." },
+      { front: "PCM", back: "Analog signalni diskretlash, kvantlash va raqamli kodlash usuli." }
+    ],
+    blanks: { text: "Har bir bit davri o‘rtasida voltaj o‘zgarishi sodir bo‘ladigan kodlash usuli ___ kodlash deyiladi.", answer: "Manchester", hint: "Angliya shahri nomi" }
+  },
+  6: {
+    flashcards: [
+      { front: "Klient-Server", back: "Server xizmat ko‘rsatadigan, Klient esa so‘rov yuboradigan markazlashgan arxitektura." },
+      { front: "1000BASE-T", back: "UTP Cat5e/6 kabeli orqali 1 Gbit/s tezlik beruvchi Gigabit Ethernet standarti." },
+      { front: "FCS (CRC)", back: "Ethernet kadrining oxirida xatolarni tekshiruvchi maydon." }
+    ],
+    blanks: { text: "Standart Ethernet kadrining maksimal yuklama hajmi (MTU) ___ baytga teng.", answer: "1500", hint: "Son kiriting" }
+  },
+  7: {
+    flashcards: [
+      { front: "WSN (Simsiz sensor tarmoq)", back: "Harorat, namlik kabi ko‘rsatkichlarni o‘lchab uzatuvchi avtonom sensor tugunlari tarmog‘i." },
+      { front: "ZigBee (IEEE 802.15.4)", back: "Kam quvvat sarflovchi simsiz sensor tarmoqlar protokoli." },
+      { front: "Duplex Mismatch", back: "Bir tomon Half-Duplex, ikkinchi tomon Full-Duplex bo‘lganda yuzaga keladigan sekinlashuv." }
+    ],
+    blanks: { text: "UTP Cat5e/6 kabelining maksimal ruxsat etilgan segment uzunligi ___ metr.", answer: "100", hint: "Son kiriting" }
+  },
+  8: {
+    flashcards: [
+      { front: "Transparent Bridge", back: "O‘rganish, Filtrlash va Tarqatish (Flooding) tamoyilida ishlovchi ko‘prik algoritmi." },
+      { front: "STP (802.1D)", back: "Kommutatorlar orasidagi halqalarni (loops) bloklovchi protokol." },
+      { front: "Spine-Leaf", back: "Zamonaviy ma’lumotlar markazlarida (Data Center) qo‘llaniladigan tezkor arxitektura." }
+    ],
+    blanks: { text: "Kommutator (Switch) kadrlarni yo‘naltirishda ___ manzillar jadvalidan (CAM) foydalanadi.", answer: "MAC", hint: "3 harf" }
+  },
+  9: {
+    flashcards: [
+      { front: "TCP 3-Way Handshake", back: "Ulanishni o‘rnatishdagi SYN -> SYN-ACK -> ACK ketma-ketligi." },
+      { front: "Store-and-Forward", back: "Kadrni to‘liq qabul qilib CRC xatosini tekshirgandan keyin uzatuvchi kommutatsiya usuli." },
+      { front: "VLAN (802.1Q)", back: "Bitta fizik kommutatorni mantiqiy virtual tarmoqlarga ajratish." }
+    ],
+    blanks: { text: "Xavfsiz veb-aloqa protokoli HTTPS standart holatda ___ portidan foydalanadi.", answer: "443", hint: "Port raqami" }
+  },
+  10: {
+    flashcards: [
+      { front: "OSPF", back: "Deykstra (SPF) algoritmi yordamida eng qisqa yo‘lni hisoblovchi dinamik marshrutlash protokoli." },
+      { front: "RFC 1918 (Private IP)", back: "10.0.0.0/8, 172.16.0.0/12 va 192.168.0.0/16 lokal tarmoq manzillari." },
+      { front: "IPv6 (128 bit)", back: "Manzillar yetishmovchiligini hal qiluvchi yangi avlod IP protokoli." }
+    ],
+    blanks: { text: "Lokal qurilmaning o‘zini-o‘zi tekshirishi uchun ishlatiladigan Loopback IP manzili ___ hisoblanadi.", answer: "127.0.0.1", hint: "127..." }
+  },
+  11: {
+    flashcards: [
+      { front: "SDN", back: "Control Plane (boshqaruv) va Data Plane (uzatish) tekisliklarini ajratuvchi dasturiy tarmoq." },
+      { front: "CIA triadasi", back: "Maxfiylik (Confidentiality), Butunlik (Integrity) va Mavjudlik (Availability)." },
+      { front: "VPN", back: "Ochiq internet orqali shifrlangan himoyalangan tunnel yaratuvchi texnologiya." }
+    ],
+    blanks: { text: "SDN kontrolleri va kommutatorlar o‘rtasidagi asosiy aloqa protokoli ___ deb ataladi.", answer: "OpenFlow", hint: "O...w" }
+  },
+  12: {
+    flashcards: [
+      { front: "AIOps", back: "Sun’iy intellekt yordamida tarmoq anomaliyalarini aniqlash va avtomatik tiklash." },
+      { front: "Big Data 3V", back: "Hajm (Volume), Tezlik (Velocity) va Xilma-xillik (Variety)." },
+      { front: "QKD", back: "Kvant kriptografiya yordamida mutlaq xavfsiz kalit almashinuvi." }
+    ],
+    blanks: { text: "Sensor va aqlli qurilmalarning internetga ulanishi konsepsiyasi ___ (Buyumlar Interneti) deyiladi.", answer: "IoT", hint: "3 harf" }
+  }
+};
+
+
+const CROSSWORD_DATA = {
+  1: [
+    { word: "ARPANET", clue: "1969-yilda yaratilgan ilk paket kommutatsiyali tarmoq" },
+    { word: "ETHERNET", clue: "IEEE 802.3 standartidagi simli lokal tarmoq texnologiyasi" },
+    { word: "KABEL", clue: "Qurilmalarni simli bog‘lovchi fizik aloqa vositasi" },
+    { word: "TARMOQ", clue: "Ma’lumot almashish uchun bog‘langan kompyuterlar majmui" },
+    { word: "PORT", clue: "Qurilmaga tashqi kabel yoki periferiya ulanadigan tirqish" },
+    { word: "MODEM", clue: "Signalni modulyatsiya va demodulyatsiya qiluvchi qurilma" },
+    { word: "OPTIK", clue: "Yorug‘lik signallari orqali ma’lumot uzatuvchi tola turi" },
+    { word: "DRAYVER", clue: "Tashqi qurilma bilan operatsion tizimni bog‘lovchi dastur" },
+    { word: "SERVER", clue: "Tarmoqda boshqa qurilmalarga xizmat ko‘rsatuvchi kompyuter" },
+    { word: "PAKET", clue: "Tarmoq orqali uzatiladigan ma’lumot bo‘lagi" }
+  ],
+  2: [
+    { word: "ARXITEKTURA", clue: "Tarmoq elementlarining o‘zaro bog‘lanish mantiqiy tuzilmasi" },
+    { word: "YULDUZ", clue: "Barcha tugunlar markaziy kommutatorga ulanadigan topologiya" },
+    { word: "HALQA", clue: "Tugunlar yopiq doira shaklida ulanadigan topologiya" },
+    { word: "SHINA", clue: "Barcha kompyuterlar bitta umumiy kabelga ulanadigan topologiya" },
+    { word: "KANAL", clue: "OSI modelining 2-pog‘onasi nomi" },
+    { word: "FIZIK", clue: "Bitlarni elektr yoki yorug‘lik signaliga aylantiruvchi 1-pog‘ona" },
+    { word: "PING", clue: "Ikki kompyuter o‘rtasidagi aloqani tekshiruvchi buyruq" },
+    { word: "SEANS", clue: "OSI modelining 5-pog‘onasi" },
+    { word: "ILOVA", clue: "Foydalanuvchiga eng yaqin 7-pog‘ona" },
+    { word: "TUGUN", clue: "Tarmoqqa ulangan har qanday faol qurilma (node)" }
+  ],
+  3: [
+    { word: "LOKAL", clue: "Bitta bino yoki kampus doirasidagi tarmoq (LAN)" },
+    { word: "SHAHAR", clue: "Metropolitan miqyosidagi tarmoq (MAN)" },
+    { word: "GLOBAL", clue: "Qit’alar va davlatlarni bog‘lovchi tarmoq (WAN)" },
+    { word: "SEGMENT", clue: "Transport pog‘onasidagi ma’lumot birligi (PDU)" },
+    { word: "KADR", clue: "Kanal pog‘onasidagi ma’lumot birligi (Frame)" },
+    { word: "BIT", clue: "Fizik pog‘onadagi eng kichik ma’lumot birligi" },
+    { word: "BLUETOOTH", clue: "Shaxsiy tarmoqlar (PAN) da keng qo‘llaniladigan simsiz aloqa" },
+    { word: "MPLS", clue: "Global WAN tarmoqlarda yorliqlar asosida kommutatsiya texnologiyasi" },
+    { word: "SARLAVHA", clue: "Inkapsulyatsiya paytida ma’lumotga qo‘shiladigan boshqaruv qismi" },
+    { word: "TRAFIK", clue: "Tarmoq kanali orqali o‘tayotgan ma’lumotlar oqimi" }
+  ],
+  4: [
+    { word: "ABONENT", clue: "Provayder xizmatidan foydalanuvchi yakuniy mijoz" },
+    { word: "GPON", clue: "Passiv optik splitterli gigabit kirish tarmog‘i" },
+    { word: "ADSL", clue: "Oddiy telefon liniyasi orqali internetga ulanish texnologiyasi" },
+    { word: "OKTET", clue: "IPv4 manzilining 8 bitli to‘rtta qismidan biri" },
+    { word: "SPLITTER", clue: "Optik signalni bir nechta abonentga bo‘lib beruvchi qurilma" },
+    { word: "SHLYUZ", clue: "Lokal tarmoqni tashqi tarmoqqa chiqaruvchi darvoza (Gateway)" },
+    { word: "MASKA", clue: "IP manzilning tarmoq va xost qismlarini ajratuvchi ko‘rsatkich" },
+    { word: "XOST", clue: "IP manzilga ega bo‘lgan tarmoq qurilmasi" },
+    { word: "MANZIL", clue: "Qurilmani tarmoqda aniqlovchi noyob identifikator" },
+    { word: "DOCSIS", clue: "Koaksial televizion kabel orqali internet uzatish standarti" }
+  ],
+  5: [
+    { word: "TRANSPORT", clue: "Magistral darajada katta trafikni uzatuvchi tarmoq" },
+    { word: "DWDM", clue: "Bitta optik tolada turli to‘lqin uzunliklarini zichlashtirish" },
+    { word: "ANALOG", clue: "Vaqt bo‘yicha uzluksiz o‘zgaruvchi signal turi" },
+    { word: "RAQAMLI", clue: "0 va 1 bitlar ko‘rinishidagi diskret signal" },
+    { word: "CHASTOTA", clue: "FSK modulyatsiyasida o‘zgartiriladigan signal parametri" },
+    { word: "FAZA", clue: "PSK modulyatsiyasida o‘zgartiriladigan signal parametri" },
+    { word: "AMPLITUDA", clue: "ASK modulyatsiyasida o‘zgartiriladigan signal balandligi" },
+    { word: "KVANTLASH", clue: "Analog signalni darajalarga yaxlitlash bosqichi" },
+    { word: "KODLASH", clue: "Ma’lumotni ma’lum qoida asosida bitlarga o‘girish" },
+    { word: "MAGISTRAL", clue: "Shaharlararo asosiy yuqori tezlikli aloqa liniyasi" }
+  ],
+  6: [
+    { word: "KLIENT", clue: "Serverga so‘rov yuboruvchi foydalanuvchi dasturi yoki qurilmasi" },
+    { word: "BAZA", clue: "Ma’lumotlar saqlanadigan tizim (Database)" },
+    { word: "GIGABIT", clue: "Soniyasiga 1000 megabit tezlikdagi Ethernet standarti" },
+    { word: "KOLLIZIYA", clue: "Ikki qurilma bir vaqtda signal yuborganda yuz beruvchi to‘qnashuv" },
+    { word: "DUPLEKS", clue: "Bir vaqtda ham uzatish, ham qabul qilish imkoniyati" },
+    { word: "PREAMBULA", clue: "Ethernet kadrining boshidagi sinxronizatsiya maydoni" },
+    { word: "BIZNES", clue: "3-qatlamli arxitekturada mantiqni bajaruvchi o‘rta qatlam" },
+    { word: "YUKLAMA", clue: "Kadr ichida tashiladigan foydali ma’lumot (Payload)" },
+    { word: "SOZLAMALAR", clue: "Tizim yoki server parametrlarining majmui" },
+    { word: "MANTIQ", clue: "Dasturiy ta’minotning qaror qabul qilish qismi" }
+  ],
+  7: [
+    { word: "SENSOR", clue: "Harorat, namlik kabi fizik kattalikni o‘lchovchi datchik" },
+    { word: "ZIGBEE", clue: "IEEE 802.15.4 standartidagi kam quvvatli simsiz protokol" },
+    { word: "BATAREYA", clue: "Simsiz sensor tugunlarining asosiy energiya manbai" },
+    { word: "SIMSIZ", clue: "Kabelsiz radioto‘lqinlar orqali aloqa turi" },
+    { word: "HARORAT", clue: "Sensor tarmoqlarda eng ko‘p o‘lchanadigan parametr" },
+    { word: "METR", clue: "UTP kabelning 100 birlikdagi maksimal uzunlik o‘lchovi" },
+    { word: "KECHIKISH", clue: "Paketning manbadan manzilga yetib borish vaqti (Latency)" },
+    { word: "XATO", clue: "CRC tekshiruvida aniqlanadigan buzilgan bitlar holati" },
+    { word: "ENERGIYA", clue: "WSN tugunlarida tejash eng muhim bo‘lgan resurs" },
+    { word: "DOMEN", clue: "Kolliziya yoki broadcast tarqaladigan tarmoq sohasi" }
+  ],
+  8: [
+    { word: "KOMMUTATOR", clue: "MAC manzillar asosida kadrlarni yo‘naltiruvchi Switch qurilmasi" },
+    { word: "KOPRIK", clue: "Ikki tarmoq segmentini kanal pog‘onasida bog‘lovchi qurilma (Bridge)" },
+    { word: "ALGORITM", clue: "Ko‘rinmas ko‘prik ishlashidagi qadam-baqadam qoida" },
+    { word: "FILTRLASH", clue: "Kadrni keraksiz portlarga o‘tkazmaslik amali" },
+    { word: "BULUTLI", clue: "Internet orqali taqdim etiladigan zamonaviy hisoblash xizmati" },
+    { word: "HALQALAR", clue: "STP protokoli oldini oladigan tarmoqdagi aylanma yo‘llar" },
+    { word: "MARKAZ", clue: "Minglab serverlar joylashgan Data Center majmuasi" },
+    { word: "XOTIRA", clue: "Switchda MAC jadvali saqlanadigan tezkor CAM qismi" },
+    { word: "VIRTUAL", clue: "Dasturiy usulda yaratilgan mantiqiy tarmoq funksiyasi" },
+    { word: "JADVAL", clue: "Port va MAC manzillar mosligi yozilgan ro‘yxat" }
+  ],
+  9: [
+    { word: "INTERNET", clue: "Butun dunyo tarmoqlarini birlashtiruvchi global tarmoq" },
+    { word: "PROTOKOL", clue: "Qurilmalarning o‘zaro ma’lumot almashish qoidalari to‘plami" },
+    { word: "DOMEN", clue: "DNS tizimi IP manzilga aylantiradigan sayt nomi" },
+    { word: "VLAN", clue: "Bitta kommutatorda yaratiladigan virtual lokal tarmoq" },
+    { word: "MATRITSA", clue: "Kommutator ichida portlarni bog‘lovchi tezkor tizim" },
+    { word: "POCHTA", clue: "SMTP va IMAP protokollari xizmat ko‘rsatadigan ilova" },
+    { word: "BRAUZER", clue: "HTTP/HTTPS sahifalarini ko‘rsatuvchi klient dastur" },
+    { word: "SHIFRLASH", clue: "HTTPS protokolida ma’lumotni yashirish jarayoni" },
+    { word: "FAYL", clue: "FTP protokoli orqali uzatiladigan ma’lumot birligi" },
+    { word: "QOLLASH", clue: "TCP/IP modelining eng yuqori pog‘onasi" }
+  ],
+  10: [
+    { word: "MARSHRUT", clue: "Paketning tarmoqlararo bosib o‘tadigan yo‘li" },
+    { word: "STATIK", clue: "Administrator tomonidan qo‘lda kiritiladigan marshrut turi" },
+    { word: "DINAMIK", clue: "OSPF yoki RIP kabi protokollar orqali avtomatik yangilanuvchi yo‘l" },
+    { word: "DEYKSTRA", clue: "OSPF protokoli asoslanadigan eng qisqa yo‘l algoritmi muallifi" },
+    { word: "OSPF", clue: "Link-State turidagi mashhur ichki marshrutlash protokoli" },
+    { word: "ROUTER", clue: "Tarmoqlar o‘rtasida paketlarni yo‘naltiruvchi asosiy qurilma" },
+    { word: "LOOPBACK", clue: "127.0.0.1 manzili bilan o‘z-o‘zini tekshirish interfeysi" },
+    { word: "CIDR", clue: "Sinfsiz IP marshrutlash va prefiksli yozuv usuli" },
+    { word: "NAT", clue: "Lokal IP manzillarni ommaviy IP ga o‘giruvchi texnologiya" },
+    { word: "FORMAT", clue: "IP manzilining bitlar va oktetlar ko‘rinishidagi tuzilishi" }
+  ],
+  11: [
+    { word: "XAVFSIZLIK", clue: "Tarmoq va ma’lumotlarni tahdidlardan himoyalash sohasi" },
+    { word: "OPENFLOW", clue: "SDN kontrolleri va kommutatorlar orasidagi boshqaruv protokoli" },
+    { word: "FIREWALL", clue: "Ruxsatsiz trafikni to‘suvchi tarmoqlararo ekran" },
+    { word: "DDOS", clue: "Millionlab so‘rovlar bilan serverni ishdan chiqarish hujumi" },
+    { word: "PAROL", clue: "Foydalanuvchini tasdiqlovchi maxfiy belgilar ketma-ketligi" },
+    { word: "TUNNEL", clue: "VPN orqali yaratiladigan himoyalangan aloqa kanali" },
+    { word: "KALIT", clue: "Ma’lumotni shifrlash va ochish uchun ishlatiladigan kod" },
+    { word: "BUTUNLIK", clue: "CIA triadasida ma’lumotning o‘zgarmasdan saqlanishi" },
+    { word: "MAXFIYLIK", clue: "Ma’lumotni begona shaxslardan sir saqlash tamoyili" },
+    { word: "VIRUS", clue: "Tizimga zarar yetkazuvchi zararli dastur turi" }
+  ],
+  12: [
+    { word: "KELAJAK", clue: "6G, kvant internet va avtonom tarmoqlar davri" },
+    { word: "KVANT", clue: "Mutlaq xavfsiz kalit almashinuvini beruvchi fizika sohasi" },
+    { word: "TELEMETRIYA", clue: "Tarmoq holati haqida real vaqtda yig‘iladigan o‘lchov ma’lumotlari" },
+    { word: "ANOMALIYA", clue: "AI yordamida aniqlanadigan g‘ayrioddiy tarmoq faolligi" },
+    { word: "BASHORAT", clue: "AIOps tizimlarining nosozlikni oldindan aniqlash qobiliyati" },
+    { word: "AVTONOM", clue: "Inson aralashuvisiz o‘zini boshqaruvchi tarmoq" },
+    { word: "HAJM", clue: "Big Data xususiyatlaridan biri (Volume)" },
+    { word: "TEZLIK", clue: "Big Data va 6G tarmoqlarida ma’lumot oqimi sur’ati (Velocity)" },
+    { word: "ROBOT", clue: "Jarayonlarni avtomatlashtiruvchi intellektual mexanizm" },
+    { word: "STRIMING", clue: "Video va audioni yuklab olmasdan real vaqtda uzatish" }
+  ]
+};
+
 const FINAL_EXAM_QUESTIONS = [
   { q: "OSI modelida paketlarni marshrutlash qaysi pog‘onada amalga oshiriladi?", opts: ["Fizik", "Kanal", "Tarmoq", "Seans"], ans: 2 },
   { q: "12 ta nazariy mavzu ichida SDN arxitekturasi nimani ajratadi?", opts: ["Control Plane va Data Plane", "RAM va ROM", "IPv4 va MAC", "HTTP va FTP"], ans: 0 },

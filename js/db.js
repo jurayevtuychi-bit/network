@@ -60,7 +60,10 @@ let state = {
   practicalSelection: {},
   labTerminalHistory: {},
   labVerified: {},
-  videoPlayer: { playing: false, stepIndex: 0, timerId: null, mode: 'youtube', embedActive: false }
+  videoPlayer: { playing: false, stepIndex: 0, timerId: null, mode: 'youtube', embedActive: false },
+  h5pState: { cardIndex: 0, flipped: false, blankResult: {} },
+  cwInputs: {},
+  cwChecked: {}
 };
 
 function loadState() {

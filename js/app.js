@@ -722,6 +722,10 @@ function openEditTopicModal(modId) {
           <input id="edit-practical-video" type="url" value="${escapeHtml(mod.practicalVideoUrl || "")}" placeholder="https://youtube.com/watch?v=..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs" />
         </div>
       </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">H5P Embed havolasi (ixtiyoriy, h5p.org / Moodle)</label>
+        <input id="edit-h5p-url" type="url" value="${escapeHtml(mod.h5pUrl || "")}" placeholder="https://h5p.org/h5p/embed/..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs" />
+      </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="closeModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-sm font-medium">Bekor qilish</button>
         <button onclick="saveTopicEdit(${mod.id})" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">Saqlash</button>
@@ -739,9 +743,217 @@ function saveTopicEdit(modId) {
   if (newTheoryText) mod.theoryContent[0] = newTheoryText;
   mod.theoryVideoUrl = document.getElementById("edit-theory-video").value.trim();
   mod.practicalVideoUrl = document.getElementById("edit-practical-video").value.trim();
+  mod.h5pUrl = document.getElementById("edit-h5p-url").value.trim();
   saveState();
   closeModal();
   showToast(`${modId}-mavzu yangilandi!`, "success");
+  render();
+}
+
+
+function getTopicH5P(mod) {
+  if (H5P_CONTENT[mod.id]) return H5P_CONTENT[mod.id];
+  return {
+    flashcards: [
+      { front: mod.theoryTitle, back: (mod.theoryContent && mod.theoryContent[0]) || "Nazariy asoslar." },
+      { front: mod.practicalTitle, back: "Amaliy mashg‘ulot ko‘nikmalari." }
+    ],
+    blanks: { text: `"${mod.theoryTitle}" mavzusini o‘zlashtirish uchun testni ___ foizga bajarish shart.`, answer: "100", hint: "Son kiriting" }
+  };
+}
+
+function flipH5PCard() {
+  state.h5pState.flipped = !state.h5pState.flipped;
+  render();
+}
+
+function nextH5PCard(total) {
+  state.h5pState.cardIndex = (state.h5pState.cardIndex + 1) % total;
+  state.h5pState.flipped = false;
+  render();
+}
+
+function prevH5PCard(total) {
+  state.h5pState.cardIndex = (state.h5pState.cardIndex - 1 + total) % total;
+  state.h5pState.flipped = false;
+  render();
+}
+
+function checkH5PBlank(modId) {
+  const inp = document.getElementById("h5p-blank-input");
+  if (!inp) return;
+  const val = inp.value.trim().toLowerCase();
+  const mod = state.modules.find(m => m.id === modId);
+  const h5p = getTopicH5P(mod);
+  const expected = h5p.blanks.answer.toLowerCase();
+  if (val === expected) {
+    state.h5pState.blankResult[modId] = "ok";
+    showToast("H5P mashq: To‘g‘ri javob! (1/1 ball)", "success");
+  } else {
+    state.h5pState.blankResult[modId] = "err";
+    showToast("Noto‘g‘ri. Yordamchi ishoraga qarab qayta urinib ko‘ring.", "warning");
+  }
+  render();
+}
+
+
+function buildCrosswordGrid(wordsList) {
+  const size = 16;
+  const grid = Array.from({ length: size }, () => Array(size).fill(null));
+  const placed = [];
+
+  function canPlace(word, r, c, dir) {
+    if (dir === 'H') {
+      if (c < 0 || c + word.length > size) return false;
+      if (c > 0 && grid[r][c - 1]) return false;
+      if (c + word.length < size && grid[r][c + word.length]) return false;
+      for (let i = 0; i < word.length; i++) {
+        const cell = grid[r][c + i];
+        if (cell && cell.letter !== word[i]) return false;
+        if (!cell) {
+          if (r > 0 && grid[r - 1][c + i]) return false;
+          if (r < size - 1 && grid[r + 1][c + i]) return false;
+        }
+      }
+      return true;
+    } else {
+      if (r < 0 || r + word.length > size) return false;
+      if (r > 0 && grid[r - 1][c]) return false;
+      if (r + word.length < size && grid[r + word.length][c]) return false;
+      for (let i = 0; i < word.length; i++) {
+        const cell = grid[r + i][c];
+        if (cell && cell.letter !== word[i]) return false;
+        if (!cell) {
+          if (c > 0 && grid[r + i][c - 1]) return false;
+          if (c < size - 1 && grid[r + i][c + 1]) return false;
+        }
+      }
+      return true;
+    }
+  }
+
+  function placeWord(item, r, c, dir, num) {
+    const w = item.word.toUpperCase();
+    for (let i = 0; i < w.length; i++) {
+      const rr = dir === 'H' ? r : r + i;
+      const cc = dir === 'H' ? c + i : c;
+      if (!grid[rr][cc]) grid[rr][cc] = { letter: w[i], nums: [] };
+      if (i === 0) grid[rr][cc].nums.push(num);
+    }
+    placed.push({ num, word: w, clue: item.clue, r, c, dir });
+  }
+
+  const sorted = wordsList.map((w, i) => ({ ...w, origIdx: i + 1 }));
+  // Place 1st word in middle horizontally
+  const first = sorted[0];
+  placeWord(first, 6, Math.max(0, Math.floor((size - first.word.length) / 2)), 'H', 1);
+
+  for (let idx = 1; idx < sorted.length; idx++) {
+    const item = sorted[idx];
+    const w = item.word.toUpperCase();
+    let best = null;
+    for (const p of placed) {
+      const tryDir = p.dir === 'H' ? 'V' : 'H';
+      for (let i = 0; i < w.length; i++) {
+        for (let j = 0; j < p.word.length; j++) {
+          if (w[i] === p.word[j]) {
+            const r = tryDir === 'V' ? (p.dir === 'H' ? p.r - i : p.r + j) : (p.dir === 'H' ? p.r : p.r + j);
+            const c = tryDir === 'H' ? (p.dir === 'V' ? p.c - i : p.c + j) : (p.dir === 'V' ? p.c : p.c + j);
+            if (canPlace(w, r, c, tryDir)) {
+              best = { r, c, dir: tryDir };
+              break;
+            }
+          }
+        }
+        if (best) break;
+      }
+      if (best) break;
+    }
+    if (!best) {
+      // Fallback: find any empty row/col
+      outer: for (let r = 0; r < size; r++) {
+        for (let c = 0; c <= size - w.length; c++) {
+          if (canPlace(w, r, c, 'H')) { best = { r, c, dir: 'H' }; break outer; }
+        }
+      }
+      if (!best) {
+        outer2: for (let c = 0; c < size; c++) {
+          for (let r = 0; r <= size - w.length; r++) {
+            if (canPlace(w, r, c, 'V')) { best = { r, c, dir: 'V' }; break outer2; }
+          }
+        }
+      }
+    }
+    if (best) placeWord(item, best.r, best.c, best.dir, idx + 1);
+  }
+
+  // Trim empty rows and cols
+  let minR = size, maxR = 0, minC = size, maxC = 0;
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (grid[r][c]) {
+        if (r < minR) minR = r;
+        if (r > maxR) maxR = r;
+        if (c < minC) minC = c;
+        if (c > maxC) maxC = c;
+      }
+    }
+  }
+  return { grid, placed, minR, maxR, minC, maxC };
+}
+
+function getTopicCrossword(mod) {
+  if (CROSSWORD_DATA[mod.id]) return CROSSWORD_DATA[mod.id];
+  return CROSSWORD_DATA[1];
+}
+
+function handleCwInput(modId, r, c, el) {
+  const val = (el.value || "").toUpperCase().replace(/[^A-Z‘']/g, "");
+  el.value = val.slice(-1);
+  if (!state.cwInputs[modId]) state.cwInputs[modId] = {};
+  state.cwInputs[modId][`${r}_${c}`] = el.value;
+}
+
+function checkCrossword(modId) {
+  const mod = state.modules.find(m => m.id === modId);
+  const cw = buildCrosswordGrid(getTopicCrossword(mod));
+  const inputs = state.cwInputs[modId] || {};
+  let correctWords = 0;
+  cw.placed.forEach(p => {
+    let ok = true;
+    for (let i = 0; i < p.word.length; i++) {
+      const rr = p.dir === 'H' ? p.r : p.r + i;
+      const cc = p.dir === 'H' ? p.c + i : p.c;
+      if ((inputs[`${rr}_${cc}`] || "") !== p.word[i]) ok = false;
+    }
+    if (ok) correctWords++;
+  });
+  state.cwChecked[modId] = { correctWords, total: cw.placed.length };
+  if (correctWords === cw.placed.length) {
+    showToast(`Ajoyib! Barcha ${cw.placed.length} ta so‘z to‘g‘ri topildi!`, "success");
+  } else {
+    showToast(`${correctWords} / ${cw.placed.length} ta so‘z to‘g‘ri topildi.`, "info");
+  }
+  render();
+}
+
+function revealCrossword(modId) {
+  const mod = state.modules.find(m => m.id === modId);
+  const cw = buildCrosswordGrid(getTopicCrossword(mod));
+  if (!state.cwInputs[modId]) state.cwInputs[modId] = {};
+  for (let r = cw.minR; r <= cw.maxR; r++) {
+    for (let c = cw.minC; c <= cw.maxC; c++) {
+      if (cw.grid[r][c]) state.cwInputs[modId][`${r}_${c}`] = cw.grid[r][c].letter;
+    }
+  }
+  state.cwChecked[modId] = { correctWords: cw.placed.length, total: cw.placed.length };
+  showToast("Krassvord javoblari ko‘rsatildi.", "info");
+  render();
+}
+
+function resetCrossword(modId) {
+  state.cwInputs[modId] = {};
+  delete state.cwChecked[modId];
   render();
 }
 
@@ -978,6 +1190,8 @@ function renderCoursesTab(stu, progressPct, completedTopics) {
           <div class="flex gap-2 border-b border-slate-200 pb-3 mb-5 overflow-x-auto">
             <button onclick="state.activeTopicSubTab='theory'; render();" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${state.activeTopicSubTab==='theory' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">📖 Nazariy mashg‘ulot</button>
             <button onclick="state.activeTopicSubTab='practical'; state.videoPlayer.stepIndex=0; state.videoPlayer.embedActive=false; stopVideoTimer(); render();" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${state.activeTopicSubTab==='practical' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">🎬 Amaliy & Videodars</button>
+            <button onclick="state.activeTopicSubTab='h5p'; state.h5pState.cardIndex=0; state.h5pState.flipped=false; render();" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${state.activeTopicSubTab==='h5p' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">🧩 H5P Materiallar</button>
+            <button onclick="state.activeTopicSubTab='crossword'; render();" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${state.activeTopicSubTab==='crossword' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">🔠 Krassvord (10 so‘z)</button>
             <button onclick="state.activeTopicSubTab='quiz'; render();" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${state.activeTopicSubTab==='quiz' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">✅ Mavzu testi (100%)</button>
           </div>
 
@@ -1042,6 +1256,124 @@ function renderCoursesTab(stu, progressPct, completedTopics) {
               </div>
             </div>
           ` : ""}
+
+
+          ${state.activeTopicSubTab === "h5p" ? (() => {
+            const h5p = getTopicH5P(mod);
+            const cards = h5p.flashcards;
+            const cIdx = Math.min(state.h5pState.cardIndex, cards.length - 1);
+            const card = cards[cIdx];
+            const bRes = state.h5pState.blankResult[mod.id];
+            return `
+              <div class="space-y-6">
+                ${mod.h5pUrl ? `
+                  <div class="rounded-2xl overflow-hidden border border-slate-200 bg-white">
+                    <div class="bg-indigo-50 px-4 py-2 text-xs font-bold text-indigo-800 flex justify-between items-center">
+                      <span>🧩 Tashqi H5P moduli</span>
+                      <a href="${escapeHtml(mod.h5pUrl)}" target="_blank" rel="noopener noreferrer" class="underline">Yangi oynada ochish</a>
+                    </div>
+                    <iframe src="${escapeHtml(mod.h5pUrl)}" class="w-full h-80 border-0" allowfullscreen></iframe>
+                  </div>
+                ` : ''}
+
+                <!-- H5P Flashcards -->
+                <div class="p-5 rounded-2xl bg-gradient-to-br from-sky-50 to-indigo-50 border border-indigo-100 space-y-4">
+                  <div class="flex items-center justify-between">
+                    <span class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-bold">H5P • Flashcards</span>
+                    <span class="text-xs font-semibold text-slate-600">Karta ${cIdx + 1} / ${cards.length}</span>
+                  </div>
+                  <button type="button" onclick="flipH5PCard()" class="w-full min-h-[150px] p-6 rounded-2xl bg-white border-2 ${state.h5pState.flipped ? 'border-emerald-400' : 'border-indigo-300'} shadow-md hover:shadow-lg transition flex flex-col items-center justify-center text-center cursor-pointer">
+                    <span class="text-[11px] uppercase tracking-wider font-bold ${state.h5pState.flipped ? 'text-emerald-600' : 'text-indigo-500'} mb-2">
+                      ${state.h5pState.flipped ? 'Tavsif (Orqa tomon)' : 'Atama (Old tomon) — Aylantirish uchun bosing'}
+                    </span>
+                    <div class="text-base sm:text-lg font-bold text-slate-900">
+                      ${escapeHtml(state.h5pState.flipped ? card.back : card.front)}
+                    </div>
+                  </button>
+                  <div class="flex items-center justify-between gap-2">
+                    <button type="button" onclick="prevH5PCard(${cards.length})" class="px-4 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-xs font-semibold">← Oldingi</button>
+                    <button type="button" onclick="flipH5PCard()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">🔄 Aylantirish</button>
+                    <button type="button" onclick="nextH5PCard(${cards.length})" class="px-4 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-xs font-semibold">Keyingi →</button>
+                  </div>
+                </div>
+
+                <!-- H5P Fill in the Blanks -->
+                <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-bold">H5P • Fill in the Blanks</span>
+                    ${bRes === 'ok' ? '<span class="text-xs font-bold text-emerald-600">✓ 1/1 To‘g‘ri</span>' : bRes === 'err' ? '<span class="text-xs font-bold text-rose-600">✕ Qayta urining</span>' : ''}
+                  </div>
+                  <p class="text-sm text-slate-800 leading-relaxed font-medium">${escapeHtml(h5p.blanks.text)}</p>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <input id="h5p-blank-input" type="text" placeholder="Javobni yozing (${escapeHtml(h5p.blanks.hint)})" class="flex-1 min-w-[180px] px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-sm outline-none focus:ring-2 focus:ring-emerald-500" />
+                    <button type="button" onclick="checkH5PBlank(${mod.id})" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold">Tekshirish</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          })() : ""}
+
+
+          ${state.activeTopicSubTab === "crossword" ? (() => {
+            const cw = buildCrosswordGrid(getTopicCrossword(mod));
+            const inputs = state.cwInputs[mod.id] || {};
+            const chk = state.cwChecked[mod.id];
+            const cols = cw.maxC - cw.minC + 1;
+            const horiz = cw.placed.filter(p => p.dir === 'H');
+            const vert = cw.placed.filter(p => p.dir === 'V');
+            return `
+              <div class="space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-2 bg-sky-50 border border-sky-200 p-3.5 rounded-xl">
+                  <div>
+                    <div class="font-bold text-sm text-slate-900">🔠 ${mod.id}-Mavzu Krassvordi (${cw.placed.length} ta so‘z)</div>
+                    <div class="text-xs text-slate-600">Kataklarga harflarni lotin alifbosida kiriting va natijani tekshiring.</div>
+                  </div>
+                  ${chk ? `<span class="px-3 py-1 rounded-full text-xs font-bold ${chk.correctWords===chk.total ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'}">${chk.correctWords} / ${chk.total} so‘z to‘g‘ri</span>` : ''}
+                </div>
+
+                <div class="overflow-x-auto pb-2">
+                  <div class="inline-grid gap-1 bg-slate-200 p-2 rounded-2xl mx-auto" style="grid-template-columns: repeat(${cols}, minmax(28px, 34px));">
+                    ${Array.from({ length: cw.maxR - cw.minR + 1 }, (_, ri) => {
+                      const r = cw.minR + ri;
+                      return Array.from({ length: cols }, (_, ci) => {
+                        const c = cw.minC + ci;
+                        const cell = cw.grid[r][c];
+                        if (!cell) return `<div class="w-7 h-7 sm:w-8 sm:h-8"></div>`;
+                        const val = inputs[`${r}_${c}`] || "";
+                        let bg = "bg-white border-slate-300";
+                        if (chk) {
+                          bg = val === cell.letter ? "bg-emerald-100 border-emerald-500 text-emerald-900" : "bg-rose-100 border-rose-400 text-rose-900";
+                        }
+                        return `
+                          <div class="relative w-7 h-7 sm:w-8 sm:h-8">
+                            ${cell.nums.length ? `<span class="absolute top-0 left-0.5 text-[8px] font-bold text-indigo-600 leading-none pointer-events-none">${cell.nums[0]}</span>` : ''}
+                            <input type="text" maxlength="1" value="${escapeHtml(val)}" oninput="handleCwInput(${mod.id}, ${r}, ${c}, this)" class="w-full h-full text-center font-bold text-xs sm:text-sm uppercase rounded border ${bg} outline-none focus:ring-2 focus:ring-indigo-500" />
+                          </div>
+                        `;
+                      }).join("");
+                    }).join("")}
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                  <button type="button" onclick="checkCrossword(${mod.id})" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold">✓ Tekshirish</button>
+                  <button type="button" onclick="revealCrossword(${mod.id})" class="px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs sm:text-sm font-semibold">👁 Javoblarni ko‘rish</button>
+                  <button type="button" onclick="resetCrossword(${mod.id})" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold">↺ Tozalash</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1.5">
+                    <div class="font-bold text-slate-800 mb-1">→ Gorizontal (Bo‘yiga)</div>
+                    ${horiz.map(p => `<div><strong>${p.num}.</strong> ${escapeHtml(p.clue)} <span class="text-slate-400">(${p.word.length})</span></div>`).join("")}
+                  </div>
+                  <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-1.5">
+                    <div class="font-bold text-slate-800 mb-1">↓ Vertikal (Eniga)</div>
+                    ${vert.map(p => `<div><strong>${p.num}.</strong> ${escapeHtml(p.clue)} <span class="text-slate-400">(${p.word.length})</span></div>`).join("")}
+                  </div>
+                </div>
+              </div>
+            `;
+          })() : ""}
 
           ${state.activeTopicSubTab === "quiz" ? `
             <div class="space-y-5">
