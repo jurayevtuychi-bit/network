@@ -72,25 +72,59 @@ function getTheoryVideoSteps(mod) {
   ];
 }
 
-function getYouTubeEmbedUrl(url) {
+    function playYouTubeOrFallback() {
+  const isSandboxed = (window.location.origin === "null" || window.location.protocol === "about:" || window.location.protocol === "data:");
+  if (isSandboxed) {
+    state.videoPlayer.mode = "slides";
+    state.videoPlayer.embedActive = false;
+    showToast("Canvas oynasida YouTube cheklangan (153-xato). Slayd-dars ochildi — YouTube uchun 'YouTube’da ochish' tugmasini bosing.", "info");
+  } else {
+    state.videoPlayer.embedActive = true;
+  }
+  render();
+}
+
+function getYouTubeId(url) {
   if (!url) return "";
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
-  return m ? `https://www.youtube.com/embed/${m[1]}` : "";
+  return m ? m[1] : "";
+}
+function getYouTubeEmbedUrl(url) {
+  const id = getYouTubeId(url);
+  return id ? `https://www.youtube.com/embed/${id}?autoplay=1&rel=0` : "";
 }
 
 function renderVideoPlayer(title, steps, customUrl = "") {
+  const ytId = getYouTubeId(customUrl);
   const ytEmbed = getYouTubeEmbedUrl(customUrl);
   if (ytEmbed && state.videoPlayer.mode !== 'slides') {
+    const thumbUrl = `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`;
     return `
       <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-lg border border-slate-800">
-        <div class="aspect-video w-full bg-black">
-          <iframe src="${escapeHtml(ytEmbed)}" class="w-full h-full" title="${escapeHtml(title)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
+        ${state.videoPlayer.embedActive ? `
+          <div class="aspect-video w-full bg-black">
+            <iframe src="${escapeHtml(ytEmbed)}" class="w-full h-full" title="${escapeHtml(title)}" referrerpolicy="strict-origin-when-cross-origin" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+        ` : `
+          <div class="relative aspect-video w-full bg-slate-950 flex items-center justify-center overflow-hidden group">
+            <img src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(title)}" class="w-full h-full object-cover opacity-55 group-hover:opacity-65 transition" onerror="this.style.display='none'" />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent flex flex-col items-center justify-center p-4 text-center">
+              <button type="button" onclick="playYouTubeOrFallback()" class="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center shadow-2xl transition transform hover:scale-105 mb-3">
+                <svg class="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+              <div class="text-white font-bold text-sm sm:text-base max-w-md">${escapeHtml(title)}</div>
+              <div class="flex flex-wrap justify-center gap-2 mt-3">
+                <button type="button" onclick="playYouTubeOrFallback()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold">▶ Shu yerda ko‘rish</button>
+                <a href="${escapeHtml(customUrl)}" target="_blank" rel="noopener noreferrer" class="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold">↗ YouTube’da ochish</a>
+              </div>
+            </div>
+          </div>
+        `}
         <div class="bg-slate-950 px-4 py-2.5 text-xs text-slate-300 flex flex-wrap justify-between items-center gap-2">
           <span class="truncate max-w-xs">🎬 ${escapeHtml(title)}</span>
           <div class="flex items-center gap-2">
             <a href="${escapeHtml(customUrl)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-rose-600/20 text-rose-300 hover:bg-rose-600/30 font-semibold">↗ YouTube’da ochish</a>
-            <button type="button" onclick="state.videoPlayer.mode='slides'; render();" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold">📺 Slayd-darsga o‘tish</button>
+            <button type="button" onclick="state.videoPlayer.mode='slides'; state.videoPlayer.embedActive=false; render();" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold">📺 Slayd-darsga o‘tish</button>
           </div>
         </div>
       </div>
@@ -329,7 +363,7 @@ function selectTopic(topicId) {
     return;
   }
   stopVideoTimer();
-  state.videoPlayer.stepIndex = 0;
+  state.videoPlayer.stepIndex = 0; state.videoPlayer.embedActive = false;
   state.activeTopicId = topicId;
   state.activeTopicSubTab = "theory";
   state.quizAnswers = {};
@@ -714,7 +748,7 @@ function saveTopicEdit(modId) {
 function renderAuthView() {
   const isReg = state.authTab === "register";
   return `
-    <div class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4">
+    <div class="min-h-screen bg-sky-950/45 backdrop-blur-[2px] flex items-center justify-center p-4">
       <div class="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         <div class="text-white space-y-6">
           <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold">
@@ -943,7 +977,7 @@ function renderCoursesTab(stu, progressPct, completedTopics) {
 
           <div class="flex gap-2 border-b border-slate-200 pb-3 mb-5 overflow-x-auto">
             <button onclick="state.activeTopicSubTab='theory'; render();" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${state.activeTopicSubTab==='theory' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">📖 Nazariy mashg‘ulot</button>
-            <button onclick="state.activeTopicSubTab='practical'; state.videoPlayer.stepIndex=0; stopVideoTimer(); render();" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${state.activeTopicSubTab==='practical' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">🎬 Amaliy & Videodars</button>
+            <button onclick="state.activeTopicSubTab='practical'; state.videoPlayer.stepIndex=0; state.videoPlayer.embedActive=false; stopVideoTimer(); render();" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${state.activeTopicSubTab==='practical' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">🎬 Amaliy & Videodars</button>
             <button onclick="state.activeTopicSubTab='quiz'; render();" class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${state.activeTopicSubTab==='quiz' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">✅ Mavzu testi (100%)</button>
           </div>
 
@@ -1083,7 +1117,7 @@ function renderLabsTab(stu) {
             const done = stu.completedLabs.includes(l.id);
             const active = state.activeLabId === l.id;
             return `
-              <button onclick="state.activeLabId=${l.id}; state.videoPlayer.stepIndex=0; stopVideoTimer(); render();" class="w-full text-left p-3.5 flex items-start gap-3 transition ${active ? 'bg-indigo-50' : 'hover:bg-slate-50'}">
+              <button onclick="state.activeLabId=${l.id}; state.videoPlayer.stepIndex=0; state.videoPlayer.embedActive=false; stopVideoTimer(); render();" class="w-full text-left p-3.5 flex items-start gap-3 transition ${active ? 'bg-indigo-50' : 'hover:bg-slate-50'}">
                 <div class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${done ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-700'}">
                   ${done ? '✓' : l.id}
                 </div>

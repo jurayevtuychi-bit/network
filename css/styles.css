@@ -1,4 +1,10 @@
-body { font-family: 'Inter', system-ui, sans-serif; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-image: linear-gradient(rgba(240, 249, 255, 0.72), rgba(224, 242, 254, 0.78)), url('../assets/digital-world-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
 .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }

@@ -60,7 +60,7 @@ let state = {
   practicalSelection: {},
   labTerminalHistory: {},
   labVerified: {},
-  videoPlayer: { playing: false, stepIndex: 0, timerId: null, mode: 'youtube' }
+  videoPlayer: { playing: false, stepIndex: 0, timerId: null, mode: 'youtube', embedActive: false }
 };
 
 function loadState() {
@@ -71,8 +71,18 @@ function loadState() {
       if (parsed.students) state.students = parsed.students;
       if (typeof parsed.strictGating === "boolean") state.strictGating = parsed.strictGating;
       if (parsed.finalPassThreshold) state.finalPassThreshold = parsed.finalPassThreshold;
-      if (parsed.modules) state.modules = parsed.modules;
-      if (parsed.labs) state.labs = parsed.labs;
+      if (parsed.modules) {
+        state.modules = parsed.modules.map(pm => {
+          const def = COURSE_MODULES.find(cm => cm.id === pm.id);
+          return def ? { ...def, ...pm, theoryVideoUrl: pm.theoryVideoUrl || def.theoryVideoUrl } : pm;
+        });
+      }
+      if (parsed.labs) {
+        state.labs = parsed.labs.map(pl => {
+          const def = LAB_MODULES.find(lm => lm.id === pl.id);
+          return def ? { ...def, ...pl, videoUrl: pl.videoUrl || def.videoUrl } : pl;
+        });
+      }
       if (parsed.adminCredentials) state.adminCredentials = parsed.adminCredentials;
     }
   } catch (e) {}
