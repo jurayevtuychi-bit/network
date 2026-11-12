@@ -699,7 +699,6 @@ function renderAuthView() {
             <div class="flex flex-wrap gap-2">
               <button onclick="quickDemoLogin('student_new')" class="px-3 py-2 rounded-xl bg-indigo-600/80 hover:bg-indigo-500 text-white text-xs font-semibold transition">👤 Talaba (1-mavzu)</button>
               <button onclick="quickDemoLogin('student_grad')" class="px-3 py-2 rounded-xl bg-emerald-600/80 hover:bg-emerald-500 text-white text-xs font-semibold transition">🎓 Bitiruvchi (Sertifikat)</button>
-              <button onclick="quickDemoLogin('admin')" class="px-3 py-2 rounded-xl bg-amber-600/80 hover:bg-amber-500 text-white text-xs font-semibold transition">🛡 Admin Panel</button>
             </div>
           </div>
         </div>
@@ -774,8 +773,7 @@ function renderAuthView() {
               <button type="submit" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-lg shadow-indigo-600/20 transition">Platformaga kirish</button>
               <div class="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <strong>Sinov hisoblari:</strong><br/>
-                Talaba: <code class="text-indigo-600">azizbek@tuit.uz</code> / parol: <code class="text-indigo-600">123</code><br/>
-                Admin: <code class="text-amber-600">${escapeHtml(state.adminCredentials.email)}</code> / parol: <code class="text-amber-600">${escapeHtml(state.adminCredentials.password)}</code>
+                Talaba: <code class="text-indigo-600">azizbek@tuit.uz</code> / parol: <code class="text-indigo-600">123</code>
               </div>
             </form>
           ` : `
