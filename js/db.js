@@ -60,7 +60,7 @@ let state = {
   practicalSelection: {},
   labTerminalHistory: {},
   labVerified: {},
-  videoPlayer: { playing: false, stepIndex: 0, timerId: null }
+  videoPlayer: { playing: false, stepIndex: 0, timerId: null, mode: 'youtube' }
 };
 
 function loadState() {

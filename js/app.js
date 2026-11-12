@@ -61,7 +61,41 @@ function setVideoStep(idx) {
   render();
 }
 
-function renderVideoPlayer(title, steps) {
+
+function getTheoryVideoSteps(mod) {
+  if (mod.theoryVideoSteps && mod.theoryVideoSteps.length) return mod.theoryVideoSteps;
+  const c = mod.theoryContent || [];
+  return [
+    { time: "00:00", title: `${mod.id}-Ma’ruza: Kirish va asosiy tushunchalar`, caption: c[0] || mod.theoryTitle },
+    { time: "02:15", title: "Arxitektura va protokollar tahlili", caption: c[1] || `${mod.theoryTitle} bo‘yicha asosiy standartlar va ishlash mexanizmi.` },
+    { time: "04:30", title: "Zamonaviy qo‘llanilishi va xulosa", caption: c[2] || `Amaliyotda qo‘llash va keyingi mashg‘ulotga tayyorgarlik.` }
+  ];
+}
+
+function getYouTubeEmbedUrl(url) {
+  if (!url) return "";
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
+  return m ? `https://www.youtube.com/embed/${m[1]}` : "";
+}
+
+function renderVideoPlayer(title, steps, customUrl = "") {
+  const ytEmbed = getYouTubeEmbedUrl(customUrl);
+  if (ytEmbed && state.videoPlayer.mode !== 'slides') {
+    return `
+      <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-lg border border-slate-800">
+        <div class="aspect-video w-full bg-black">
+          <iframe src="${escapeHtml(ytEmbed)}" class="w-full h-full" title="${escapeHtml(title)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="bg-slate-950 px-4 py-2.5 text-xs text-slate-300 flex flex-wrap justify-between items-center gap-2">
+          <span class="truncate max-w-xs">🎬 ${escapeHtml(title)}</span>
+          <div class="flex items-center gap-2">
+            <a href="${escapeHtml(customUrl)}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-rose-600/20 text-rose-300 hover:bg-rose-600/30 font-semibold">↗ YouTube’da ochish</a>
+            <button type="button" onclick="state.videoPlayer.mode='slides'; render();" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold">📺 Slayd-darsga o‘tish</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
   const idx = Math.min(state.videoPlayer.stepIndex, steps.length - 1);
   const step = steps[idx];
   return `
@@ -91,7 +125,8 @@ function renderVideoPlayer(title, steps) {
           </button>
           <span class="text-xs text-slate-400 truncate max-w-[220px] sm:max-w-xs">${escapeHtml(title)}</span>
         </div>
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          ${ytEmbed ? `<button type="button" onclick="stopVideoTimer(); state.videoPlayer.mode='youtube'; render();" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold mr-1">▶ YouTube video</button>` : ''}
           ${steps.map((s, i) => `
             <button onclick="setVideoStep(${i})" class="px-2 py-1 rounded text-xs font-mono ${i === idx ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'}">${escapeHtml(s.time)}</button>
           `).join("")}
@@ -643,6 +678,16 @@ function openEditTopicModal(modId) {
         <label class="block text-xs font-semibold text-slate-600 mb-1">Nazariy matn (1-band)</label>
         <textarea id="edit-theory-content" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm">${escapeHtml(mod.theoryContent[0] || "")}</textarea>
       </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Ma’ruza YouTube havolasi (ixtiyoriy)</label>
+          <input id="edit-theory-video" type="url" value="${escapeHtml(mod.theoryVideoUrl || "")}" placeholder="https://youtube.com/watch?v=..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Amaliy YouTube havolasi (ixtiyoriy)</label>
+          <input id="edit-practical-video" type="url" value="${escapeHtml(mod.practicalVideoUrl || "")}" placeholder="https://youtube.com/watch?v=..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs" />
+        </div>
+      </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="closeModal()" class="px-4 py-2 rounded-xl border border-slate-300 text-sm font-medium">Bekor qilish</button>
         <button onclick="saveTopicEdit(${mod.id})" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">Saqlash</button>
@@ -658,6 +703,8 @@ function saveTopicEdit(modId) {
   mod.practicalTitle = document.getElementById("edit-practical-title").value.trim() || mod.practicalTitle;
   const newTheoryText = document.getElementById("edit-theory-content").value.trim();
   if (newTheoryText) mod.theoryContent[0] = newTheoryText;
+  mod.theoryVideoUrl = document.getElementById("edit-theory-video").value.trim();
+  mod.practicalVideoUrl = document.getElementById("edit-practical-video").value.trim();
   saveState();
   closeModal();
   showToast(`${modId}-mavzu yangilandi!`, "success");
@@ -901,9 +948,13 @@ function renderCoursesTab(stu, progressPct, completedTopics) {
           </div>
 
           ${state.activeTopicSubTab === "theory" ? `
-            <div class="space-y-4">
+            <div class="space-y-5">
+              <div>
+                <h3 class="text-sm font-bold text-slate-800 mb-2">🎬 Ma’ruza videomateriali</h3>
+                ${renderVideoPlayer(mod.theoryTitle, getTheoryVideoSteps(mod), mod.theoryVideoUrl || "")}
+              </div>
               <div class="p-4 rounded-xl bg-indigo-50/70 border border-indigo-100 text-sm text-indigo-950 font-medium">
-                Nazariy mashg‘ulot maqsadi: "${escapeHtml(mod.theoryTitle)}" mavzusining asosiy tushunchalari, standartlari va ishlash prinsiplarini o‘zlashtirish.
+                Ma’ruza maqsadi: "${escapeHtml(mod.theoryTitle)}" mavzusining asosiy tushunchalari, standartlari va ishlash prinsiplarini o‘zlashtirish.
               </div>
               <div class="space-y-3">
                 ${mod.theoryContent.map((p, i) => `
@@ -924,7 +975,7 @@ function renderCoursesTab(stu, progressPct, completedTopics) {
               <div>
                 <h3 class="text-base font-bold text-slate-900 mb-1">Amaliy mashg‘ulot: ${escapeHtml(mod.practicalTitle)}</h3>
                 <p class="text-xs text-slate-500 mb-3">Videodarsni tomosha qiling va quyidagi interaktiv amaliy topshiriqni bajaring.</p>
-                ${renderVideoPlayer(mod.practicalTitle, mod.practicalVideoSteps)}
+                ${renderVideoPlayer(mod.practicalTitle, mod.practicalVideoSteps, mod.practicalVideoUrl || "")}
               </div>
 
               <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
@@ -1059,7 +1110,7 @@ function renderLabsTab(stu) {
 
           <div>
             <h3 class="text-sm font-bold text-slate-800 mb-2">🎬 Laboratoriya videodarsi</h3>
-            ${renderVideoPlayer(lab.title, lab.videoSteps)}
+            ${renderVideoPlayer(lab.title, lab.videoSteps, lab.videoUrl || "")}
           </div>
 
           <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5 space-y-4">
@@ -1071,13 +1122,19 @@ function renderLabsTab(stu) {
             <div class="flex flex-wrap items-center justify-center gap-3 p-4 bg-white rounded-xl border border-slate-200">
               ${lab.initialTopology.map((node, i) => `
                 <div class="flex items-center gap-2">
-                  <div class="px-3.5 py-2.5 rounded-xl border ${node.status==='blocked' ? 'border-rose-300 bg-rose-50' : 'border-indigo-200 bg-indigo-50/50'} text-center min-w-[110px]">
+                  <button type="button" onclick="showToast('${escapeHtml(node.name)} • IP: ${escapeHtml(node.ip)} • Holat: ${node.status === 'blocked' ? 'Bloklangan' : 'Faol (UP)'}', '${node.status === 'blocked' ? 'warning' : 'info'}')" class="px-3.5 py-2.5 rounded-xl border ${node.status==='blocked' ? 'border-rose-300 bg-rose-50 hover:bg-rose-100' : 'border-indigo-200 bg-indigo-50/50 hover:bg-indigo-100'} text-center min-w-[110px] transition cursor-pointer">
                     <div class="text-lg">${node.type==='router' ? '🌐' : node.type==='switch' ? '🔀' : node.type==='server' ? '🗄️' : '💻'}</div>
                     <div class="text-xs font-bold text-slate-800">${escapeHtml(node.name)}</div>
                     <div class="text-[10px] font-mono text-slate-500">${escapeHtml(node.ip)}</div>
-                  </div>
+                  </button>
                   ${i < lab.initialTopology.length - 1 ? `<div class="w-6 h-0.5 bg-emerald-500 hidden sm:block"></div>` : ''}
                 </div>
+              `).join("")}
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[11px] font-semibold text-slate-500 mr-1">Tezkor buyruqlar:</span>
+              ${lab.expectedCommands.map(cmd => `
+                <button type="button" onclick="document.getElementById('lab-cli-input').value='${escapeHtml(cmd)}'; runLabCommand(${lab.id});" class="px-2.5 py-1 rounded-lg bg-slate-200 hover:bg-indigo-100 text-slate-800 hover:text-indigo-800 font-mono text-[11px] font-medium transition">+ ${escapeHtml(cmd)}</button>
               `).join("")}
             </div>
 

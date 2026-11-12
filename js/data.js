@@ -4,6 +4,7 @@
 const COURSE_MODULES = [
   {
     id: 1,
+    theoryVideoUrl: "https://www.youtube.com/watch?v=MqGgMbx9Cmw",
     theoryTitle: "Kompyuter tarmoqlarining tarixi va qo‘llaniladigan texnologiyalari",
     practicalTitle: "Kompyuterni tashqi qurilmalar bilan bog‘lash",
     theoryContent: [
@@ -34,6 +35,7 @@ const COURSE_MODULES = [
   },
   {
     id: 2,
+    theoryVideoUrl: "https://www.youtube.com/watch?v=74C82Hne2F0",
     theoryTitle: "Tarmoq arxitekturasi",
     practicalTitle: "Ikki kompyuterning o‘zaro aloqasini tashkil qilish",
     theoryContent: [
@@ -64,6 +66,7 @@ const COURSE_MODULES = [
   },
   {
     id: 3,
+    theoryVideoUrl: "https://www.youtube.com/watch?v=vv0EI_H5cnM",
     theoryTitle: "Lokal, shahar va global tarmoqlar va ularning qurilish usullari",
     practicalTitle: "Kompyuter tarmoqlarida axborot almashinish jarayonini tashkil qilish",
     theoryContent: [
@@ -94,6 +97,7 @@ const COURSE_MODULES = [
   },
   {
     id: 4,
+    theoryVideoUrl: "https://www.youtube.com/watch?v=U0DffguTyd4",
     theoryTitle: "Abonent kirish tarmoqlari",
     practicalTitle: "MAC va IP-adreslarning tuzilishlari",
     theoryContent: [
@@ -124,6 +128,7 @@ const COURSE_MODULES = [
   },
   {
     id: 5,
+    theoryVideoUrl: "https://www.youtube.com/watch?v=qXnSrwQKb58",
     theoryTitle: "Transport tarmoqlari",
     practicalTitle: "Analog modulyatsiya, raqamli kodlash va analog signallarni diskret modulyatsiyalash",
     theoryContent: [
@@ -154,6 +159,7 @@ const COURSE_MODULES = [
   },
   {
     id: 6,
+    theoryVideoUrl: "https://www.youtube.com/watch?v=NRxYVGit5Js",
     theoryTitle: "Klient-server arxitekturalari",
     practicalTitle: "Ethernet texnologiyasi oilasiga mansub lokal kompyuter tarmoqlarining standartlari va spesifikatsiyalari",
     theoryContent: [
@@ -184,6 +190,7 @@ const COURSE_MODULES = [
   },
   {
     id: 7,
+    theoryVideoUrl: "https://www.youtube.com/watch?v=CsuqWkVaMvk",
     theoryTitle: "Simsiz sensor tarmoqlar",
     practicalTitle: "Ethernet tarmog‘i konfiguratiyasini to‘g‘ri qurilganligi aniqlash usuli",
     theoryContent: [
@@ -214,6 +221,7 @@ const COURSE_MODULES = [
   },
   {
     id: 8,
+    theoryVideoUrl: "https://www.youtube.com/watch?v=qMJBmAvdLxw",
     theoryTitle: "Zamonaviy kompyuter tarmoqlari",
     practicalTitle: "Ko‘prik va kommutatorlarning ishlash tamoillari. Ko‘rinmas ko‘prik algoritmi",
     theoryContent: [
@@ -244,6 +252,7 @@ const COURSE_MODULES = [
   },
   {
     id: 9,
+    theoryVideoUrl: "https://www.youtube.com/watch?v=ALBnLNO-inU",
     theoryTitle: "Internet tarixi va arxitekturasi. Transport va ilova pog’onasi",
     practicalTitle: "Kommutatorlarning ishlash prinsiplari va tuzilishlari",
     theoryContent: [
@@ -274,6 +283,7 @@ const COURSE_MODULES = [
   },
   {
     id: 10,
+    theoryVideoUrl: "https://www.youtube.com/watch?v=pbZ2B7EyS3Y",
     theoryTitle: "Aloqa va marshrutlash. Marshrutlash qurilishi va algoritmlari",
     practicalTitle: "IP adresining formati va uning turlari",
     theoryContent: [
@@ -304,6 +314,7 @@ const COURSE_MODULES = [
   },
   {
     id: 11,
+    theoryVideoUrl: "https://www.youtube.com/watch?v=d802sF9P0tY",
     theoryTitle: "SDN tarmoqlar. Internet xavfsizligi",
     practicalTitle: "Internetdagi asosiy xavf-xatarlar. Internet xavfsizligini ta’minlash usullari",
     theoryContent: [
@@ -334,6 +345,7 @@ const COURSE_MODULES = [
   },
   {
     id: 12,
+    theoryVideoUrl: "https://www.youtube.com/watch?v=44X8_AlFTZ8",
     theoryTitle: "Ilovalar. Internet kelajagi",
     practicalTitle: "Sun’iy intellekt va Big Data",
     theoryContent: [
@@ -367,6 +379,7 @@ const COURSE_MODULES = [
 const LAB_MODULES = [
   {
     id: 1,
+    videoUrl: "https://www.youtube.com/watch?v=HUogSIxtrRk",
     title: "Tarmoq simulyatorlari bilan ishlash",
     tool: "Simulyator asoslari",
     desc: "Tarmoq simulyatorlari (Cisco Packet Tracer, GNS3, EVE-NG) interfeysi, qurilmalar paneli, kabellar va mantiqiy/fizik ishchi maydon bilan tanishish.",
