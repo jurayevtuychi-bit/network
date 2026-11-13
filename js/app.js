@@ -957,6 +957,47 @@ function resetCrossword(modId) {
   render();
 }
 
+
+function openUserGuideModal() {
+  openModal(`
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2.5">
+        <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg">📖</span>
+        <div>
+          <h3 class="text-lg font-bold text-slate-900">Saytdan foydalanish yo‘riqnomasi</h3>
+          <p class="text-xs text-slate-500">Kompyuter tarmoqlari o‘quv platformasi</p>
+        </div>
+      </div>
+      <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 font-bold text-xl">✕</button>
+    </div>
+    <div class="space-y-3.5 text-sm text-slate-700">
+      <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="font-bold text-slate-900 mb-1">1. Ro‘yxatdan o‘tish va kirish</div>
+        <p class="text-xs leading-relaxed">Bosh sahifadagi <strong>Ro‘yxatdan o‘tish</strong> bo‘limidan F.I.Sh., guruh, email va parolingizni kiritib hisob oching. Agar login yoki parolingizni unutsangiz, <strong>Tiklash</strong> bo‘limi orqali qayta tiklashingiz mumkin.</p>
+      </div>
+      <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100">
+        <div class="font-bold text-indigo-950 mb-1">2. Nazariy, Amaliy, H5P va Krassvord (12 ta mavzu)</div>
+        <p class="text-xs leading-relaxed">Har bir mavzu ichida <strong>Ma’ruza</strong> (matn va YouTube/slayd videomaterial), <strong>Amaliy mashg‘ulot</strong>, <strong>H5P materiallar</strong> (Flesh-kartalar va bo‘sh joyni to‘ldirish), <strong>10 so‘zli Krassvord</strong> hamda <strong>Mavzu testi</strong> mavjud.</p>
+      </div>
+      <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200">
+        <div class="font-bold text-amber-950 mb-1">3. Qat’iy 100% o‘tish qoidasi</div>
+        <p class="text-xs leading-relaxed">1-mavzu testini <strong>100%</strong> to‘g‘ri bajarmaguncha 2-mavzu ochilmaydi. Shu tartibda barcha 12 ta mavzuni 100% yakunlaganingizdan so‘ng <strong>Yakuniy nazorat testi</strong> faollashadi.</p>
+      </div>
+      <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="font-bold text-slate-900 mb-1">4. Virtual Laboratoriya (8 ta mashg‘ulot)</div>
+        <p class="text-xs leading-relaxed"><strong>Laboratoriya (8)</strong> bo‘limida videodarsni ko‘rib, virtual Cisco IOS CLI terminalida ko‘rsatilgan buyruqlarni bajaring va laboratoriyani topshiring.</p>
+      </div>
+      <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
+        <div class="font-bold text-emerald-950 mb-1">5. Yakuniy nazorat va Sertifikat</div>
+        <p class="text-xs leading-relaxed">Yakuniy nazorat testidan muvaffaqiyatli o‘tganingizdan so‘ng shaxsiy kabinetingizda rasmiy <strong>Sertifikat</strong> shakllanadi va uni chop etish (yoki PDF saqlash) mumkin bo‘ladi.</p>
+      </div>
+    </div>
+    <div class="mt-5 flex justify-end">
+      <button onclick="closeModal()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Tushunarli, yopish</button>
+    </div>
+  `);
+}
+
 function renderAuthView() {
   const isReg = state.authTab === "register";
   return `
@@ -991,7 +1032,7 @@ function renderAuthView() {
             <p class="text-xs text-slate-400 mb-2 font-medium">Tezkor sinov (Demo kirish):</p>
             <div class="flex flex-wrap gap-2">
               <button onclick="quickDemoLogin('student_new')" class="px-3 py-2 rounded-xl bg-indigo-600/80 hover:bg-indigo-500 text-white text-xs font-semibold transition">👤 Talaba (1-mavzu)</button>
-              <button onclick="quickDemoLogin('student_grad')" class="px-3 py-2 rounded-xl bg-emerald-600/80 hover:bg-emerald-500 text-white text-xs font-semibold transition">🎓 Bitiruvchi (Sertifikat)</button>
+              <button type="button" onclick="openUserGuideModal()" class="px-3 py-2 rounded-xl bg-emerald-600/85 hover:bg-emerald-500 text-white text-xs font-semibold transition">📖 Foydalanish yo‘riqnomasi</button>
             </div>
           </div>
         </div>
