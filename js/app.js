@@ -998,6 +998,295 @@ function openUserGuideModal() {
   `);
 }
 
+
+function setAiDiagAnswer(qId, idx) {
+  state.aiState.diagAnswers[qId] = idx;
+  render();
+}
+
+function generateAiCoursePlan() {
+  const total = AI_DIAGNOSTIC_QUESTIONS.length;
+  if (Object.keys(state.aiState.diagAnswers).length < total) {
+    showToast("Iltimos, AI tekshiruvi uchun barcha 6 ta savolga javob bering!", "warning");
+    return;
+  }
+  let correct = 0;
+  const pillarResults = [];
+  const weakModuleIds = new Set();
+
+  AI_DIAGNOSTIC_QUESTIONS.forEach(q => {
+    const isOk = state.aiState.diagAnswers[q.id] === q.ans;
+    if (isOk) {
+      correct++;
+    } else {
+      q.modules.forEach(m => weakModuleIds.add(m));
+    }
+    pillarResults.push({ pillar: q.pillar, ok: isOk, modules: q.modules });
+  });
+
+  const pct = Math.round((correct / total) * 100);
+  let level = "Boshlang‘ich (A1)";
+  let summary = "Siz tarmoq asoslarini bosqichma-bosqich, nazariya va H5P mashqlardan boshlab o‘rganishingiz tavsiya etiladi.";
+  if (pct >= 80) {
+    level = "Yuqori (C1)";
+    summary = "Bilimingiz juda yaxshi! AI sizga murakkab marshrutlash, SDN va Virtual Laboratoriya amaliyotlariga urg‘u beruvchi tezlashtirilgan kurs tuzdi.";
+  } else if (pct >= 50) {
+    level = "O‘rta (B1)";
+    summary = "Asosiy tushunchalar bor. AI sizning bo‘shliqlaringizni to‘ldirish uchun ustuvor mavzular va amaliy mashqlarni tartiblab berdi.";
+  }
+
+  const goal = state.aiState.goal || "general";
+  const pace = state.aiState.pace || "1h";
+
+  const orderedModules = [
+    ...state.modules.filter(m => weakModuleIds.has(m.id)),
+    ...state.modules.filter(m => !weakModuleIds.has(m.id))
+  ];
+
+  const planSteps = orderedModules.map((m, idx) => {
+    const isWeak = weakModuleIds.has(m.id);
+    const week = Math.floor(idx / 3) + 1;
+    let taskHint = "Ma’ruza videosi + H5P + 100% test";
+    if (goal === "lab") taskHint = "Ma’ruza + Krassvord + Virtual Laboratoriya";
+    if (goal === "exam") taskHint = "Tezkor nazariya + H5P + 100% test";
+    return {
+      moduleId: m.id,
+      title: m.theoryTitle,
+      priority: isWeak ? "Ustuvor (Takrorlash zarur)" : "Asosiy dastur",
+      isWeak,
+      week,
+      taskHint
+    };
+  });
+
+  state.aiState.plan = {
+    pct,
+    correct,
+    total,
+    level,
+    summary,
+    goal,
+    pace,
+    pillarResults,
+    planSteps,
+    createdAt: new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" })
+  };
+  saveState();
+  showToast("AI siz uchun shaxsiy o‘quv kursini tuzib chiqdi!", "success");
+  render();
+}
+
+function resetAiDiagnostic() {
+  state.aiState.diagAnswers = {};
+  state.aiState.plan = null;
+  saveState();
+  render();
+}
+
+function getLocalAiReply(prompt) {
+  const q = prompt.toLowerCase();
+  if (q.includes("osi")) {
+    return "OSI modeli 7 pog‘onadan iborat: 1) Fizik, 2) Kanal (MAC/Switch), 3) Tarmoq (IP/Router), 4) Transport (TCP/UDP), 5) Seans, 6) Taqdimot, 7) Ilova (HTTP/DNS). 2-mavzuda batafsil video va H5P mashqlar bor.";
+  }
+  if (q.includes("ip") || q.includes("subnet") || q.includes("maska")) {
+    return "IPv4 manzil 32 bit (4 ta oktet) dan iborat. Masalan, /24 (255.255.255.0) maskada 254 ta foydali xost manzili bo‘ladi (2^8 - 2). 4 va 10-mavzularni ko‘rib chiqing.";
+  }
+  if (q.includes("ospf") || q.includes("marshrut") || q.includes("router")) {
+    return "OSPF — Link-State turidagi dinamik marshrutlash protokoli bo‘lib, Deykstra (SPF) algoritmi yordamida eng qisqa yo‘lni hisoblaydi. Cisco CLI da: 'router ospf 1' buyrug‘i bilan yoqiladi (10-mavzu va 4-laboratoriya).";
+  }
+  if (q.includes("vlan") || q.includes("switch") || q.includes("stp")) {
+    return "Switch (Kommutator) MAC manzillar jadvali (CAM) asosida ishlaydi. VLAN (802.1Q) bitta fizik switchni mantiqiy tarmoqlarga ajratadi, STP (802.1D) esa halqalarni bloklaydi (8-9-mavzular).";
+  }
+  if (q.includes("sdn") || q.includes("xavfsizlik") || q.includes("firewall") || q.includes("vpn")) {
+    return "SDN arxitekturasida Control Plane va Data Plane ajratiladi hamda OpenFlow protokoli ishlatiladi. Tarmoq xavfsizligi esa CIA triadasi (Maxfiylik, Butunlik, Mavjudlik) ga asoslanadi (11-mavzu).";
+  }
+  if (q.includes("kurs") || q.includes("nima qilay") || q.includes("boshla")) {
+    return "Avval yuqoridagi 6 ta AI diagnostika savolini yeching — men sizning kuchli va bo‘sh tomonlaringizni aniqlab, shaxsiy bosqichma-bosqich kurs rejasini tuzib beraman!";
+  }
+  return `"${prompt}" bo‘yicha maslahat: Kompyuter tarmoqlari platformasida har bir mavzu 100% test natijasi bilan ochiladi. Avval ma’ruza videosini ko‘ring, H5P va Krassvord orqali mustahkamlang, so‘ng Virtual Laboratoriyada Cisco CLI buyruqlarini sinab ko‘ring.`;
+}
+
+async function sendAiChatMessage(e) {
+  e.preventDefault();
+  const inp = document.getElementById("ai-chat-input");
+  if (!inp) return;
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = "";
+  state.aiState.chat.push({ role: "user", text });
+  render();
+
+  let reply = getLocalAiReply(text);
+  if (state.geminiApiKey) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(state.geminiApiKey)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Sen "Kompyuter tarmoqlari" fani bo'yicha o'zbek tilidagi AI ustozsan. Qisqa va aniq javob ber: ${text}` }] }]
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const liveText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (liveText) reply = liveText;
+      }
+    } catch (_) {}
+  }
+
+  state.aiState.chat.push({ role: "ai", text: reply });
+  saveState();
+  render();
+}
+
+function openTopicFromAiPlan(modId) {
+  const stu = getCurrentStudent();
+  if (state.strictGating && stu && modId > stu.unlockedUpTo) {
+    showToast(`${modId}-mavzuni ochish uchun avval ${stu.unlockedUpTo}-mavzu testini 100% bajaring.`, "warning");
+    return;
+  }
+  state.activeTopicId = modId;
+  state.activeTopicSubTab = "theory";
+  state.studentTab = "courses";
+  render();
+}
+
+function renderAiTutorTab(stu) {
+  const ai = state.aiState;
+  const plan = ai.plan;
+  return `
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-8 space-y-6">
+        <div class="bg-white/95 backdrop-blur-sm rounded-2xl border border-indigo-200 p-6 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-sky-500 text-white flex items-center justify-center text-2xl shadow">🤖</div>
+              <div>
+                <h2 class="text-lg font-extrabold text-slate-900">AI Bilim Tekshiruvi va Shaxsiy Kurs Tuzuvchi</h2>
+                <p class="text-xs text-slate-500">AI fan bo‘yicha bilimingizni tekshirib, sizga moslashtirilgan o‘quv kursini yaratadi</p>
+              </div>
+            </div>
+            ${plan ? `<button type="button" onclick="resetAiDiagnostic()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700">↺ Qayta tekshirish</button>` : ''}
+          </div>
+
+          ${!plan ? `
+            <div class="space-y-5">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl bg-sky-50 border border-sky-200">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">O‘quv maqsadingiz</label>
+                  <select onchange="state.aiState.goal=this.value;" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-medium">
+                    <option value="general" ${ai.goal==='general'?'selected':''}>To‘liq fan o‘zlashtirish</option>
+                    <option value="lab" ${ai.goal==='lab'?'selected':''}>Amaliyot va Cisco Laboratoriya</option>
+                    <option value="exam" ${ai.goal==='exam'?'selected':''}>Yakuniy imtihon va Sertifikat</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1">Kunlik o‘qish tezligi</label>
+                  <select onchange="state.aiState.pace=this.value;" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-medium">
+                    <option value="30m" ${ai.pace==='30m'?'selected':''}>30 daqiqa / kun (Yengil)</option>
+                    <option value="1h" ${ai.pace==='1h'?'selected':''}>1 soat / kun (Optimal)</option>
+                    <option value="2h" ${ai.pace==='2h'?'selected':''}>2 soat / kun (Tezkor)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                ${AI_DIAGNOSTIC_QUESTIONS.map((q, idx) => `
+                  <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/70">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-[11px] font-bold text-indigo-600 uppercase">${idx + 1}-savol • ${escapeHtml(q.pillar)}</span>
+                    </div>
+                    <div class="text-sm font-semibold text-slate-900 mb-3">${escapeHtml(q.q)}</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      ${q.opts.map((opt, oi) => {
+                        const sel = ai.diagAnswers[q.id] === oi;
+                        return `
+                          <button type="button" onclick="setAiDiagAnswer('${q.id}', ${oi})" class="text-left px-3.5 py-2.5 rounded-xl border text-xs font-medium transition ${sel ? 'border-indigo-600 bg-indigo-50 text-indigo-900 font-bold' : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'}">
+                            ${String.fromCharCode(65 + oi)}) ${escapeHtml(opt)}
+                          </button>
+                        `;
+                      }).join("")}
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+
+              <button type="button" onclick="generateAiCoursePlan()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white font-bold text-sm shadow-lg transition">
+                🤖 AI Tahlil qilish va Shaxsiy Kurs tuzish
+              </button>
+            </div>
+          ` : `
+            <div class="space-y-5">
+              <div class="p-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-sky-600 text-white flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <div class="text-xs uppercase tracking-wider text-sky-100 font-bold">AI Diagnostika Natijasi (${plan.createdAt})</div>
+                  <div class="text-2xl font-extrabold mt-1">${escapeHtml(plan.level)} — ${plan.pct}% (${plan.correct}/${plan.total})</div>
+                  <p class="text-xs text-sky-100 mt-1 max-w-xl">${escapeHtml(plan.summary)}</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                ${plan.pillarResults.map(pr => `
+                  <div class="p-3 rounded-xl border ${pr.ok ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'} flex items-center justify-between text-xs">
+                    <span class="font-semibold text-slate-800">${escapeHtml(pr.pillar)}</span>
+                    <span class="font-bold ${pr.ok ? 'text-emerald-700' : 'text-amber-700'}">${pr.ok ? '✓ Kuchli' : '⚡ Takrorlash'}</span>
+                  </div>
+                `).join("")}
+              </div>
+
+              <div>
+                <h3 class="font-bold text-sm text-slate-900 mb-3">📚 AI tuzgan Shaxsiy O‘quv Kursi (${plan.planSteps.length} ta modul)</h3>
+                <div class="space-y-2.5 max-h-[420px] overflow-y-auto pr-1 custom-scroll">
+                  ${plan.planSteps.map((st, i) => `
+                    <div class="p-3.5 rounded-xl border ${st.isWeak ? 'border-amber-300 bg-amber-50/60' : 'border-slate-200 bg-white'} flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <span class="px-2 py-0.5 rounded-md bg-slate-800 text-white text-[10px] font-bold">${st.week}-hafta</span>
+                          <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${st.isWeak ? 'bg-amber-200 text-amber-900' : 'bg-emerald-100 text-emerald-800'}">${escapeHtml(st.priority)}</span>
+                        </div>
+                        <div class="font-bold text-sm text-slate-900 mt-1">${i + 1}. ${st.moduleId}-mavzu: ${escapeHtml(st.title)}</div>
+                        <div class="text-xs text-slate-500 mt-0.5">Tavsiya: ${escapeHtml(st.taskHint)}</div>
+                      </div>
+                      <button type="button" onclick="openTopicFromAiPlan(${st.moduleId})" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Mavzuga o‘tish →</button>
+                    </div>
+                  `).join("")}
+                </div>
+              </div>
+            </div>
+          `}
+        </div>
+      </div>
+
+      <div class="lg:col-span-4">
+        <div class="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col h-[540px]">
+          <div class="flex items-center gap-2.5 pb-3 border-b border-slate-200">
+            <span class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-base">💬</span>
+            <div>
+              <div class="font-bold text-sm text-slate-900">AI Fan Ustozi</div>
+              <div class="text-[11px] text-emerald-600 font-semibold">● Onlayn yordamchi</div>
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-y-auto py-3 space-y-3 custom-scroll text-xs">
+            ${ai.chat.map(m => `
+              <div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}">
+                <div class="max-w-[85%] px-3.5 py-2.5 rounded-2xl leading-relaxed ${m.role === 'user' ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-slate-100 text-slate-800 rounded-bl-sm'}">
+                  ${escapeHtml(m.text)}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+
+          <form onsubmit="sendAiChatMessage(event)" class="pt-3 border-t border-slate-200 flex gap-2">
+            <input id="ai-chat-input" type="text" placeholder="Savol yozing (masalan: OSPF nima?)..." class="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs outline-none focus:ring-2 focus:ring-indigo-500" />
+            <button type="submit" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Yuborish</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderAuthView() {
   const isReg = state.authTab === "register";
   return `
@@ -1157,6 +1446,7 @@ function renderStudentView() {
         </div>
         <nav class="flex items-center gap-1 sm:gap-2 overflow-x-auto">
           <button onclick="state.studentTab='courses'; render();" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap ${state.studentTab==='courses' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'}">📚 Mavzular (12)</button>
+          <button onclick="state.studentTab='ai_tutor'; render();" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap ${state.studentTab==='ai_tutor' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'}">🤖 AI Shaxsiy Kurs</button>
           <button onclick="state.studentTab='labs'; render();" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap ${state.studentTab==='labs' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'}">🔬 Laboratoriya (8)</button>
           <button onclick="state.studentTab='final'; render();" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap ${state.studentTab==='final' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'}">🎓 Yakuniy & Sertifikat</button>
           <button onclick="state.studentTab='cabinet'; render();" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap ${state.studentTab==='cabinet' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100'}">👤 Kabinet</button>
@@ -1169,6 +1459,7 @@ function renderStudentView() {
 
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
       ${state.studentTab === "courses" ? renderCoursesTab(stu, progressPct, completedTopics) : ""}
+      ${state.studentTab === "ai_tutor" ? renderAiTutorTab(stu) : ""}
       ${state.studentTab === "labs" ? renderLabsTab(stu) : ""}
       ${state.studentTab === "final" ? renderFinalTab(stu, finalUnlocked, completedTopics) : ""}
       ${state.studentTab === "cabinet" ? renderCabinetTab(stu, progressPct, completedTopics) : ""}
@@ -1890,6 +2181,14 @@ function renderAdminView() {
               </div>
             </div>
             <button onclick="saveAdminCredentials()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">Admin ma’lumotlarini saqlash</button>
+          </div>
+          <div class="p-4 rounded-xl bg-sky-50 border border-sky-200 space-y-2">
+            <div class="font-bold text-sm text-slate-900">🤖 Gemini AI API Kaliti (ixtiyoriy)</div>
+            <div class="text-xs text-slate-600">Kalit kiritilmasa ham o‘rnatilgan AI fan ustozi va kurs tuzuvchi to‘liq ishlaydi.</div>
+            <div class="flex gap-2">
+              <input id="admin-gemini-key" type="password" value="${escapeHtml(state.geminiApiKey || "")}" placeholder="AIza..." class="flex-1 px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs" />
+              <button onclick="state.geminiApiKey=document.getElementById('admin-gemini-key').value.trim(); saveState(); showToast('AI kaliti saqlandi!', 'success');" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold">Saqlash</button>
+            </div>
           </div>
         </div>
       ` : ""}

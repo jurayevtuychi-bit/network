@@ -804,6 +804,58 @@ const CROSSWORD_DATA = {
   ]
 };
 
+
+const AI_DIAGNOSTIC_QUESTIONS = [
+  {
+    id: "d1",
+    pillar: "Tarmoq asoslari va OSI",
+    modules: [1, 2, 3],
+    q: "OSI etalon modelining qaysi pog‘onasi IP-manzillash va paketlarni tarmoqlararo marshrutlash uchun javobgar?",
+    opts: ["2-pog‘ona (Kanal)", "3-pog‘ona (Tarmoq)", "4-pog‘ona (Transport)", "1-pog‘ona (Fizik)"],
+    ans: 1
+  },
+  {
+    id: "d2",
+    pillar: "IP-manzillash va Subnetting",
+    modules: [4, 10],
+    q: "192.168.10.0/24 tarmoq maskasi (255.255.255.0) nechta foydali xost IP manzilini qo‘llab-quvvatlaydi?",
+    opts: ["256 ta", "254 ta", "128 ta", "62 ta"],
+    ans: 1
+  },
+  {
+    id: "d3",
+    pillar: "Fizik qatlam va Optik/Simsiz aloqa",
+    modules: [5, 7],
+    q: "Bitta optik tolada turli to‘lqin uzunliklari yordamida bir nechta kanallarni parallel uzatish texnologiyasi qaysi?",
+    opts: ["CSMA/CD", "DWDM", "ARP", "DHCP"],
+    ans: 1
+  },
+  {
+    id: "d4",
+    pillar: "Klient-Server va Kommutatsiya",
+    modules: [6, 8, 9],
+    q: "Kommutator (Switch) tarmoqdagi halqalarni (loops) oldini olish uchun qaysi protokoldan foydalanadi?",
+    opts: ["STP (Spanning Tree Protocol)", "DNS", "SMTP", "FTP"],
+    ans: 0
+  },
+  {
+    id: "d5",
+    pillar: "Marshrutlash va TCP/IP",
+    modules: [9, 10],
+    q: "Deykstra (SPF) algoritmi asosida eng qisqa yo‘lni hisoblovchi dinamik marshrutlash protokoli qaysi?",
+    opts: ["RIP", "OSPF", "ICMP", "HTTP"],
+    ans: 1
+  },
+  {
+    id: "d6",
+    pillar: "Tarmoq xavfsizligi, SDN va Kelajak",
+    modules: [11, 12],
+    q: "SDN (Software-Defined Networking) arxitekturasida kontroller va kommutatorlar orasidagi asosiy protokol qaysi?",
+    opts: ["OpenFlow", "Telnet", "POP3", "SNMP"],
+    ans: 0
+  }
+];
+
 const FINAL_EXAM_QUESTIONS = [
   { q: "OSI modelida paketlarni marshrutlash qaysi pog‘onada amalga oshiriladi?", opts: ["Fizik", "Kanal", "Tarmoq", "Seans"], ans: 2 },
   { q: "12 ta nazariy mavzu ichida SDN arxitekturasi nimani ajratadi?", opts: ["Control Plane va Data Plane", "RAM va ROM", "IPv4 va MAC", "HTTP va FTP"], ans: 0 },

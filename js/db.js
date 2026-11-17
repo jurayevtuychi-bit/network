@@ -63,7 +63,15 @@ let state = {
   videoPlayer: { playing: false, stepIndex: 0, timerId: null, mode: 'youtube', embedActive: false },
   h5pState: { cardIndex: 0, flipped: false, blankResult: {} },
   cwInputs: {},
-  cwChecked: {}
+  cwChecked: {},
+  geminiApiKey: "",
+  aiState: {
+    goal: "general",
+    pace: "1h",
+    diagAnswers: {},
+    plan: null,
+    chat: [{ role: "ai", text: "Salom! Men Kompyuter tarmoqlari bo‘yicha AI ustozman. Chap tomonda bilim darajangizni tekshiring yoki mendan istalgan mavzu (OSI, IPv4, OSPF, VLAN, SDN) haqida so‘rang!" }]
+  }
 };
 
 function loadState() {
@@ -87,6 +95,8 @@ function loadState() {
         });
       }
       if (parsed.adminCredentials) state.adminCredentials = parsed.adminCredentials;
+      if (parsed.aiState) state.aiState = parsed.aiState;
+      if (parsed.geminiApiKey !== undefined) state.geminiApiKey = parsed.geminiApiKey;
     }
   } catch (e) {}
 }
@@ -99,7 +109,9 @@ function saveState() {
       finalPassThreshold: state.finalPassThreshold,
       modules: state.modules,
       labs: state.labs,
-      adminCredentials: state.adminCredentials
+      adminCredentials: state.adminCredentials,
+      aiState: state.aiState,
+      geminiApiKey: state.geminiApiKey
     }));
   } catch (e) {}
 }
